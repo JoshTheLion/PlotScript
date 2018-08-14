@@ -22,6 +22,7 @@ typedef'd Procedure function pointer.
 
 // the default procedure always returns an expresison of type None
 Expression default_proc(const std::vector<Expression> & args){
+  args.size(); // make compiler happy we used this parameter
   return Expression();
 };
 

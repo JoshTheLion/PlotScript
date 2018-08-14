@@ -22,14 +22,5 @@ bool Interpreter::parseStream(std::istream & expression) noexcept{
 
 Expression Interpreter::evaluate(){
 
-  Expression result;
-    
-  try{
-    result = ast.eval(env);
-  }
-  catch(const SemanticError & ex){
-    throw;
-  }
-  
-  return result;
+  return ast.eval(env);
 }

@@ -26,6 +26,7 @@ std::string Token::asString() const{
   case STRING:
     return value;
   }
+  return "";
 }
 
 

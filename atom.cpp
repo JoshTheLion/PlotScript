@@ -1,7 +1,7 @@
 #include "atom.hpp"
 
 #include <sstream>
-#include <cstring>
+#include <cctype>
 #include <cmath>
 #include <limits>
 
