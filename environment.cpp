@@ -104,6 +104,24 @@ Expression div(const std::vector<Expression> & args){
   return Expression(result);
 };
 
+Expression sqrt(const std::vector<Expression> & args) {
+
+	double result = 0;
+	
+	if (nargs_equal(args, 1)) {
+		if (args[0].isHeadNumber() && (args[0].head().asNumber() >= 0)) {
+			result = std::sqrt(args[0].head().asNumber());
+		}
+		else {
+			throw SemanticError("Error in call to square root: invalid argument.");
+		}
+	}
+	else {
+		throw SemanticError("Error in call to square root: invalid number of arguments.");
+	}
+	return Expression(result);
+};
+
 // Built-in symbols defined here
 const double PI = std::atan2(0, -1);
 const double EXP = std::exp(1);
@@ -200,4 +218,7 @@ void Environment::reset(){
 
   // Procedure: div;
   envmap.emplace("/", EnvResult(ProcedureType, div)); 
+
+  // Procedure: sqrt;
+  envmap.emplace("sqrt", EnvResult(ProcedureType, sqrt));
 }
