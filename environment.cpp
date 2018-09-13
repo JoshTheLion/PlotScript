@@ -150,6 +150,25 @@ Expression a_pow_b(const std::vector<Expression> & args) {
 	return Expression(result);
 };
 
+Expression nat_log(const std::vector<Expression> & args) {
+
+	double result = 0;
+
+	if (nargs_equal(args, 1)) {
+		// Check for known cmath error sources before calling function
+		if (args[0].isHeadNumber() && (args[0].head().asNumber() >= 0)) {
+			result = std::log(args[0].head().asNumber());
+		}
+		else {
+			throw SemanticError("Error in call to natural log: invalid argument.");
+		}
+	}
+	else {
+		throw SemanticError("Error in call to natural log: invalid number of arguments.");
+	}
+	return Expression(result);
+};
+
 // Built-in symbols defined here
 const double PI = std::atan2(0, -1);
 const double EXP = std::exp(1);
@@ -252,4 +271,7 @@ void Environment::reset(){
 
   // Procedure: (^ a b);
   envmap.emplace("^", EnvResult(ProcedureType, a_pow_b));
+
+  // Procedure: ln;
+  envmap.emplace("ln", EnvResult(ProcedureType, nat_log));
 }
