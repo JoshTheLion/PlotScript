@@ -104,6 +104,7 @@ Expression div(const std::vector<Expression> & args){
   return Expression(result);
 };
 
+// Built-in symbols defined here
 const double PI = std::atan2(0, -1);
 const double EXP = std::exp(1);
 
@@ -184,6 +185,9 @@ void Environment::reset(){
   
   // Built-In value of pi
   envmap.emplace("pi", EnvResult(ExpressionType, Expression(PI)));
+
+  // Built-In value of Euler's Number
+  envmap.emplace("e", EnvResult(ExpressionType, Expression(EXP)));
 
   // Procedure: add;
   envmap.emplace("+", EnvResult(ProcedureType, add)); 
