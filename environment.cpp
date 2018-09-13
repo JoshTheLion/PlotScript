@@ -169,6 +169,60 @@ Expression nat_log(const std::vector<Expression> & args) {
 	return Expression(result);
 };
 
+Expression sine(const std::vector<Expression> & args) {
+
+	double result = 0;
+
+	if (nargs_equal(args, 1)) {
+		if (args[0].isHeadNumber()) { 
+			result = std::sin(args[0].head().asNumber());
+		}
+		else { // Might have to limit domain with fmod(args, 2*pi)
+			throw SemanticError("Error in call to sine: invalid argument.");
+		}
+	}
+	else {
+		throw SemanticError("Error in call to sine: invalid number of arguments.");
+	}
+	return Expression(result);
+};
+
+Expression cosine(const std::vector<Expression> & args) {
+
+	double result = 0;
+
+	if (nargs_equal(args, 1)) {
+		if (args[0].isHeadNumber()) {
+			result = std::cos(args[0].head().asNumber());
+		}
+		else { // Might have to limit domain with fmod(args, 2*pi)
+			throw SemanticError("Error in call to cosine: invalid argument.");
+		}
+	}
+	else {
+		throw SemanticError("Error in call to cosine: invalid number of arguments.");
+	}
+	return Expression(result);
+};
+
+Expression tangent(const std::vector<Expression> & args) {
+
+	double result = 0;
+
+	if (nargs_equal(args, 1)) {
+		if (args[0].isHeadNumber()) {
+			result = std::tan(args[0].head().asNumber());
+		}
+		else { // Might have to limit domain with fmod(args, 2*pi)
+			throw SemanticError("Error in call to tangent: invalid argument.");
+		}
+	}
+	else {
+		throw SemanticError("Error in call to tangent: invalid number of arguments.");
+	}
+	return Expression(result);
+};
+
 // Built-in symbols defined here
 const double PI = std::atan2(0, -1);
 const double EXP = std::exp(1);
@@ -274,4 +328,13 @@ void Environment::reset(){
 
   // Procedure: ln;
   envmap.emplace("ln", EnvResult(ProcedureType, nat_log));
+
+  // Procedure: sin;
+  envmap.emplace("sin", EnvResult(ProcedureType, sine));
+
+  // Procedure: cos;
+  envmap.emplace("cos", EnvResult(ProcedureType, cosine));
+
+  // Procedure: tan;
+  envmap.emplace("tan", EnvResult(ProcedureType, tangent));
 }
