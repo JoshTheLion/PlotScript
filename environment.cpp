@@ -122,6 +122,34 @@ Expression sqrt(const std::vector<Expression> & args) {
 	return Expression(result);
 };
 
+Expression a_pow_b(const std::vector<Expression> & args) {
+
+	double result = 0;
+
+	if (nargs_equal(args, 2)) {
+		if (args[0].isHeadNumber() && args[1].isHeadNumber()) {
+			// Store values in local variable for readability
+			double a = args[0].head().asNumber();
+			double b = args[1].head().asNumber();
+			
+			// Check for known cmath error sources before calling function
+			if ((a >= 0) && (b > 0)) {
+				result = std::pow(a, b);
+			}
+			else {
+				throw SemanticError("Error in call to a_pow_b: invalid argument.");
+			}
+		}
+		else {
+			throw SemanticError("Error in call to a_pow_b: invalid argument.");
+		}
+	}
+	else {
+		throw SemanticError("Error in call to a_pow_b: invalid number of arguments.");
+	}
+	return Expression(result);
+};
+
 // Built-in symbols defined here
 const double PI = std::atan2(0, -1);
 const double EXP = std::exp(1);
@@ -221,4 +249,7 @@ void Environment::reset(){
 
   // Procedure: sqrt;
   envmap.emplace("sqrt", EnvResult(ProcedureType, sqrt));
+
+  // Procedure: (^ a b);
+  envmap.emplace("^", EnvResult(ProcedureType, a_pow_b));
 }
