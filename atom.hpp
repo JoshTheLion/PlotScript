@@ -26,7 +26,7 @@ public:
   Atom(const std::string & value);
 
   /// Construct an Atom of type Complex with value
-  Atom(std::complex<double> value);
+  Atom(const std::complex<double> & value);
 
   /// Construct an Atom directly from a Token
   Atom(const Token & token);
@@ -87,7 +87,7 @@ private:
   void setSymbol(const std::string & value);
   
   // helper to set type and value of Complex
-  void setComplex(std::complex<double> value);
+  void setComplex(const std::complex<double> & value);
 };
 
 /// inequality comparison for Atom
