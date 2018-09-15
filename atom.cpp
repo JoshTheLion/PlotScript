@@ -203,7 +203,14 @@ std::ostream & operator<<(std::ostream & out, const Atom & a){
     out << a.asSymbol();
   }
   if (a.isComplex()) {
-	out << a.asComplex();
+	/* 
+	** complex.operator<< adds extra parenthesis with auto-formatting:
+	**
+	**		out << a.asComplex(); // Would have printed I = ((0,1)) instead of (0,1)
+	**
+	** Have to manually output the real and imaginary parts to fix format
+	*/
+	out << a.asComplex().real() << "," << a.asComplex().imag();
   }
   return out;
 }
