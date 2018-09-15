@@ -2,9 +2,13 @@
 
 #include <cassert>
 #include <cmath>
+#include <complex.h>
+#include <complex>
 
 #include "environment.hpp"
 #include "semantic_error.hpp"
+
+using namespace std::complex_literals;
 
 /*********************************************************************** 
 Helper Functions
@@ -226,6 +230,8 @@ Expression tangent(const std::vector<Expression> & args) {
 // Built-in symbols defined here
 const double PI = std::atan2(0, -1);
 const double EXP = std::exp(1);
+const std::complex<double> IMAG = 1i;
+//const double complex Im = (0,I);
 
 Environment::Environment(){
 
@@ -307,6 +313,9 @@ void Environment::reset(){
 
   // Built-In value of Euler's Number
   envmap.emplace("e", EnvResult(ExpressionType, Expression(EXP)));
+
+  // Built-In value of Complex symbol I
+  envmap.emplace("I", EnvResult(ExpressionType, Expression(IMAG)));
 
   // Procedure: add;
   envmap.emplace("+", EnvResult(ProcedureType, add)); 
