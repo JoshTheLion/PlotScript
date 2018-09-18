@@ -26,7 +26,7 @@ public:
   Atom(const std::string & value);
 
   /// Construct an Atom of type Complex with value
-  Atom(const std::complex<double> & value);
+  Atom(std::complex<double> value);
 
   /// Construct an Atom directly from a Token
   Atom(const Token & token);
@@ -74,7 +74,7 @@ private:
 
   // values for the known types. Note the use of a union requires care
   // when setting non POD values (see setSymbol)
-  union {
+  union { // A union is a special class type that can hold only one of its non-static data members at a time.
     double numberValue;
     std::string stringValue;
 	std::complex<double> complexValue;
@@ -87,7 +87,7 @@ private:
   void setSymbol(const std::string & value);
   
   // helper to set type and value of Complex
-  void setComplex(const std::complex<double> & value);
+  void setComplex(std::complex<double> value);
 };
 
 /// inequality comparison for Atom

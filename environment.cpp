@@ -8,7 +8,7 @@
 #include "environment.hpp"
 #include "semantic_error.hpp"
 
-using namespace std::complex_literals;
+//using namespace std::complex_literals;
 
 /*********************************************************************** 
 Helper Functions
@@ -230,7 +230,7 @@ Expression tangent(const std::vector<Expression> & args) {
 // Built-in symbols defined here
 const double PI = std::atan2(0, -1);
 const double EXP = std::exp(1);
-const std::complex<double> IMAG = 1i;
+const std::complex<double> IMAG = std::complex<double>(0.0, 1.0);
 //const double complex Im = (0,I);
 
 Environment::Environment(){

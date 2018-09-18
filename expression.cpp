@@ -53,6 +53,9 @@ bool Expression::isHeadSymbol() const noexcept{
   return m_head.isSymbol();
 }  
 
+bool Expression::isHeadComplex() const noexcept{
+  return m_head.isComplex();
+} 
 
 void Expression::append(const Atom & a){
   m_tail.emplace_back(a);
@@ -105,7 +108,7 @@ Expression Expression::handle_lookup(const Atom & head, const Environment & env)
 	throw SemanticError("Error during evaluation: unknown symbol");
       }
     }
-    else if(head.isNumber()){
+    else if(head.isNumber() || head.isComplex()){
       return Expression(head);
     }
     else{

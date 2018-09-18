@@ -4,9 +4,8 @@
 #include <cctype>
 #include <cmath>
 #include <limits>
-#include <complex> // I added this
 
-using namespace std::complex_literals;
+//using namespace std::complex_literals;
 
 Atom::Atom(): m_type(NoneKind) {}
 
@@ -20,7 +19,7 @@ Atom::Atom(const std::string & value) : Atom() {
 	setSymbol(value);
 }
 
-Atom::Atom(const std::complex<double> & value) : Atom() {
+Atom::Atom(std::complex<double> value) : Atom() {
 
 	setComplex(value);
 }
@@ -40,13 +39,14 @@ Atom::Atom(const Token & token): Atom(){
   // make sure does not start with number
   else if(!std::isdigit(token.asString()[0])){
 	// is token symbol or complex ?
-	std::string temp = token.asString();
-	
-	if((temp.length() == 1) && (temp[0] == 'I')){
-	  setComplex(1i);
+	std::string tempS = token.asString();
+	//std::complex<double> IMAG = std::complex<double> (0.0,1.0);
+
+	if((tempS.length() == 1) && (tempS[0] == 'I')){
+	  setComplex(std::complex<double>(0.0, 1.0));
 	}
 	else{
-      setSymbol(temp);
+      setSymbol(tempS);
 	}
   }
 }
@@ -119,7 +119,7 @@ void Atom::setNumber(double value){
 
 void Atom::setSymbol(const std::string & value){
 
-  // we need to ensure the destructor of the symbol string is called
+  // we need to ensure the destructor of the current symbol string is called
   if(m_type == SymbolKind){
     stringValue.~basic_string();
   }
@@ -130,7 +130,7 @@ void Atom::setSymbol(const std::string & value){
   new (&stringValue) std::string(value);
 }
 
-void Atom::setComplex(const std::complex<double> & value) {
+void Atom::setComplex(std::complex<double> value) {
 
   // we need to ensure the destructor of the complex number is called
   if(m_type == ComplexKind){
@@ -162,7 +162,7 @@ std::string Atom::asSymbol() const noexcept{
 
 std::complex<double> Atom::asComplex() const noexcept {
 
-	std::complex<double> result = 0.0;
+	std::complex<double> result = (0.0);
 
 	if (m_type == ComplexKind) {
 		result = complexValue;
