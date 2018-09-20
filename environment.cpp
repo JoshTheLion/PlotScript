@@ -318,6 +318,26 @@ Expression get_imag_num(const std::vector<Expression> & args)
   return Expression(result);
 };
 
+Expression get_mag(const std::vector<Expression> & args)
+{
+  // The magnitude (absolute value) of a Complex as a Number
+  double result = 0.0;
+  
+  if(nargs_equal(args,1)){
+    if(args[0].isHeadComplex()){
+      result = std::abs(args[0].head().asComplex()); // abs is a non-member function of complex
+    }
+    else{      
+      throw SemanticError("Error in call to get magnitude: invalid argument.");
+    }
+  }
+  else{
+    throw SemanticError("Error in call to get magnitude: invalid number of arguments.");
+  }
+  
+  return Expression(result);
+};
+
 /***********************************************************************
 Built-In Symbols
 **********************************************************************/
@@ -449,4 +469,7 @@ void Environment::reset(){
 
   // Procedure: imag;
   envmap.emplace("imag", EnvResult(ProcedureType, get_imag_num));
+
+  // Procedure: mag;
+  envmap.emplace("mag", EnvResult(ProcedureType, get_mag));
 }
