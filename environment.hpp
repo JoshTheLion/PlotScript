@@ -17,6 +17,7 @@ needed.
 #include "atom.hpp"
 #include "expression.hpp"
 #include <complex.h>
+#include <complex>
 
 /*! \typedef Procedure
 \brief A Procedure is a C++ function pointer taking a vector of 

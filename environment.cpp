@@ -59,18 +59,29 @@ Expression add(const std::vector<Expression> & args)
 
 Expression mul(const std::vector<Expression> & args){
  
-  // check all aruments are numbers, while multiplying
-  double result = 1;
+  // If any argument is complex, the result should be complex
+  std::complex<double> result = (1.0);
+  bool has_complex = false; // Flag to determine result type
+  
   for( auto & a :args){ // Loops over a range of values, whose types are automatically deduced (Like Java)
     if(a.isHeadNumber()){
-      result *= a.head().asNumber();      
+      result *= a.head().asNumber();
     }
+	else if(a.isHeadComplex()){
+      result *= a.head().asComplex();
+	  has_complex = true;
+	}
     else{
       throw SemanticError("Error in call to mul, argument not a number");
     }
   }
 
-  return Expression(result);
+  if(has_complex){
+	  return Expression(result);
+  }
+  else{
+	  return Expression(result.real());
+  }
 };
 
 Expression subneg(const std::vector<Expression> & args)
