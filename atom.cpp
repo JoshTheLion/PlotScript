@@ -163,13 +163,14 @@ std::complex<double> Atom::asComplex() const noexcept {
 
 	std::complex<double> result = (0.0);
 
-	if (m_type == ComplexKind) {
+	if(m_type == ComplexKind){
 		result = complexValue;
+	}
+	else if(m_type == NumberKind){ // Shortcut for calculation results
+		result = std::complex<double>(numberValue, 0.0);
 	}
 
 	return result;
-	
-	//return (m_type == ComplexKind) ? complexValue : 0.0;
 }
 
 bool Atom::operator==(const Atom & right) const noexcept{

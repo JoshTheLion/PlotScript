@@ -110,7 +110,7 @@ Expression subneg(const std::vector<Expression> & args)
     if( (args[0].isHeadNumber()) && (args[1].isHeadNumber()) ){
       realResult = args[0].head().asNumber() - args[1].head().asNumber();
     }
-	else if( (args[0].isHeadComplex()) && (args[1].isHeadComplex()) ){
+	else if( (args[0].isHeadComplex()) || (args[1].isHeadComplex()) ){
       realResult = args[0].head().asComplex().real() - args[1].head().asComplex().real();
       imagResult = args[0].head().asComplex().imag() - args[1].head().asComplex().imag();
 	  has_complex = true;
@@ -133,12 +133,18 @@ Expression subneg(const std::vector<Expression> & args)
 
 Expression div(const std::vector<Expression> & args){
 
-  double result = 0;  
+  // If any argument is complex, the result should be complex
+  std::complex<double> result = (1.0);
+  bool has_complex = false; // Flag to determine result type
 
   if(nargs_equal(args,2)){
     if( (args[0].isHeadNumber()) && (args[1].isHeadNumber()) ){
       result = args[0].head().asNumber() / args[1].head().asNumber();
     }
+	else if( (args[0].isHeadComplex()) || (args[1].isHeadComplex()) ){
+      result = args[0].head().asComplex() / args[1].head().asComplex();
+	  has_complex = true;
+	}
     else{      
       throw SemanticError("Error in call to division: invalid argument.");
     }
@@ -146,7 +152,13 @@ Expression div(const std::vector<Expression> & args){
   else{
     throw SemanticError("Error in call to division: invalid number of arguments.");
   }
-  return Expression(result);
+  
+  if(has_complex){
+	  return Expression(result);
+  }
+  else{
+	  return Expression(result.real());
+  }
 };
 
 Expression sqrt(const std::vector<Expression> & args) {
