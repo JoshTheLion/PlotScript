@@ -163,11 +163,17 @@ Expression div(const std::vector<Expression> & args)
 
 Expression sqrt(const std::vector<Expression> & args) {
 
-	double result = 0;
-	
+	// The square root of a Complex argument or a negative Number argument
+	std::complex<double> result = (0.0); 
+	bool is_complex = false; // Flag to determine result type
+
 	if (nargs_equal(args, 1)) {
-		if (args[0].isHeadNumber() && (args[0].head().asNumber() >= 0)) {
+		if ((args[0].isHeadNumber()) && (args[0].head().asNumber() >= 0)) {
 			result = std::sqrt(args[0].head().asNumber());
+		}
+		else if ((args[0].isHeadComplex()) || (args[0].head().asNumber() < 0)) {
+			result = std::sqrt(args[0].head().asComplex());
+			is_complex = true;
 		}
 		else {
 			throw SemanticError("Error in call to square root: invalid argument.");
@@ -176,7 +182,13 @@ Expression sqrt(const std::vector<Expression> & args) {
 	else {
 		throw SemanticError("Error in call to square root: invalid number of arguments.");
 	}
-	return Expression(result);
+	
+	if (is_complex) {
+		return Expression(result);
+	}
+	else {
+		return Expression(result.real());
+	}
 };
 
 Expression a_pow_b(const std::vector<Expression> & args) {
