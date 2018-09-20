@@ -5,8 +5,7 @@ Defines the Atom type and associated functions.
 #define ATOM_HPP
 
 #include "token.hpp"
-#include <complex.h> // I added this
-#include <complex>
+#include <complex.h>
 
 /*! \class Atom
 \brief A variant type that may be a Number or Symbol or Complex or the default type None.

@@ -4,8 +4,7 @@
 #include <cctype>
 #include <cmath>
 #include <limits>
-
-//using namespace std::complex_literals;
+#include <complex>
 
 Atom::Atom(): m_type(NoneKind) {}
 
@@ -40,10 +39,10 @@ Atom::Atom(const Token & token): Atom(){
   else if(!std::isdigit(token.asString()[0])){
 	// is token symbol or complex ?
 	std::string tempS = token.asString();
-	//std::complex<double> IMAG = std::complex<double> (0.0,1.0);
+	std::complex<double> IMAG = std::complex<double>(0.0, 1.0);
 
 	if((tempS.length() == 1) && (tempS[0] == 'I')){
-	  setComplex(std::complex<double>(0.0, 1.0));
+	  setComplex(IMAG);
 	}
 	else{
       setSymbol(tempS);

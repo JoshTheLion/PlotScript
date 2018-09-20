@@ -2,22 +2,20 @@
 
 #include <cassert>
 #include <cmath>
-#include <complex.h>
 #include <complex>
 
 #include "environment.hpp"
 #include "semantic_error.hpp"
 
-//using namespace std::complex_literals;
-
 /*********************************************************************** 
-Helper Functions
+Helper Function(s)
 **********************************************************************/
 
 // predicate, the number of args is nargs
 bool nargs_equal(const std::vector<Expression> & args, unsigned nargs){
   return args.size() == nargs;
 }
+
 
 /*********************************************************************** 
 Each of the functions below have the signature that corresponds to the
@@ -30,27 +28,40 @@ Expression default_proc(const std::vector<Expression> & args){
   return Expression();
 };
 
-Expression add(const std::vector<Expression> & args){
+Expression add(const std::vector<Expression> & args)
+{
+  // If any argument is complex, the result should be complex
+  double realSum = 0.0;
+  double imagSum = 0.0;
+  bool has_complex = false; // Flag to determine result type
 
-  // check all aruments are numbers, while adding
-  double result = 0;
-  for( auto & a :args){
+  for( auto & a :args){ // Loops over a range of values, whose types are automatically deduced (Like Java)
     if(a.isHeadNumber()){
-      result += a.head().asNumber();      
+      realSum += a.head().asNumber();
     }
+	else if(a.isHeadComplex()){
+      realSum += a.head().asComplex().real();
+	  imagSum += a.head().asComplex().imag();
+	  has_complex = true;
+	}
     else{
       throw SemanticError("Error in call to add, argument not a number");
     }
   }
-
-  return Expression(result);
+  
+  if(has_complex){
+	  return Expression(std::complex<double> (realSum, imagSum));
+  }
+  else{
+	  return Expression(realSum);
+  }
 };
 
 Expression mul(const std::vector<Expression> & args){
  
   // check all aruments are numbers, while multiplying
   double result = 1;
-  for( auto & a :args){
+  for( auto & a :args){ // Loops over a range of values, whose types are automatically deduced (Like Java)
     if(a.isHeadNumber()){
       result *= a.head().asNumber();      
     }
@@ -227,11 +238,17 @@ Expression tangent(const std::vector<Expression> & args) {
 	return Expression(result);
 };
 
-// Built-in symbols defined here
+/***********************************************************************
+Built-In Symbols
+**********************************************************************/
+
 const double PI = std::atan2(0, -1);
 const double EXP = std::exp(1);
 const std::complex<double> IMAG = std::complex<double>(0.0, 1.0);
-//const double complex Im = (0,I);
+
+/***********************************************************************
+Public Methods
+**********************************************************************/
 
 Environment::Environment(){
 
