@@ -338,6 +338,26 @@ Expression get_mag(const std::vector<Expression> & args)
   return Expression(result);
 };
 
+Expression get_arg(const std::vector<Expression> & args)
+{
+  // The argument (angle or phase) of a Complex as a Number in radians
+  double result = 0.0;
+  
+  if(nargs_equal(args,1)){
+    if(args[0].isHeadComplex()){
+      result = std::arg(args[0].head().asComplex()); // arg is a non-member function of complex
+    }
+    else{      
+      throw SemanticError("Error in call to get argument: invalid argument.");
+    }
+  }
+  else{
+    throw SemanticError("Error in call to get argument: invalid number of arguments.");
+  }
+  
+  return Expression(result);
+};
+
 /***********************************************************************
 Built-In Symbols
 **********************************************************************/
@@ -472,4 +492,7 @@ void Environment::reset(){
 
   // Procedure: mag;
   envmap.emplace("mag", EnvResult(ProcedureType, get_mag));
+
+  // Procedure: arg;
+  envmap.emplace("arg", EnvResult(ProcedureType, get_arg));
 }
