@@ -57,8 +57,8 @@ Expression add(const std::vector<Expression> & args)
   }
 };
 
-Expression mul(const std::vector<Expression> & args){
- 
+Expression mul(const std::vector<Expression> & args)
+{
   // If any argument is complex, the result should be complex
   std::complex<double> result = (1.0);
   bool has_complex = false; // Flag to determine result type
@@ -131,8 +131,8 @@ Expression subneg(const std::vector<Expression> & args)
   }
 };
 
-Expression div(const std::vector<Expression> & args){
-
+Expression div(const std::vector<Expression> & args)
+{
   // If any argument is complex, the result should be complex
   std::complex<double> result = (1.0);
   bool has_complex = false; // Flag to determine result type
@@ -280,6 +280,44 @@ Expression tangent(const std::vector<Expression> & args) {
 	return Expression(result);
 };
 
+Expression get_real_num(const std::vector<Expression> & args)
+{
+  double result = 0.0;
+
+  if(nargs_equal(args,1)){
+    if(args[0].isHeadComplex()){
+      result = args[0].head().asComplex().real();
+    }
+    else{      
+      throw SemanticError("Error in call to get real part: invalid argument.");
+    }
+  }
+  else{
+    throw SemanticError("Error in call to get real part: invalid number of arguments.");
+  }
+  
+  return Expression(result);
+};
+
+Expression get_imag_num(const std::vector<Expression> & args)
+{
+  double result = 0.0;
+
+  if(nargs_equal(args,1)){
+    if(args[0].isHeadComplex()){
+      result = args[0].head().asComplex().imag();
+    }
+    else{      
+      throw SemanticError("Error in call to get imaginary part: invalid argument.");
+    }
+  }
+  else{
+    throw SemanticError("Error in call to get imaginary part: invalid number of arguments.");
+  }
+  
+  return Expression(result);
+};
+
 /***********************************************************************
 Built-In Symbols
 **********************************************************************/
@@ -405,4 +443,10 @@ void Environment::reset(){
 
   // Procedure: tan;
   envmap.emplace("tan", EnvResult(ProcedureType, tangent));
+
+  // Procedure: real;
+  envmap.emplace("real", EnvResult(ProcedureType, get_real_num));
+
+  // Procedure: imag;
+  envmap.emplace("imag", EnvResult(ProcedureType, get_imag_num));
 }
