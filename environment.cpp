@@ -73,14 +73,23 @@ Expression mul(const std::vector<Expression> & args){
   return Expression(result);
 };
 
-Expression subneg(const std::vector<Expression> & args){
-
-  double result = 0;
+Expression subneg(const std::vector<Expression> & args)
+{
+  // If any argument is complex, the result should be complex
+  //std::complex<double> result = 0.0;
+  double realResult = 0.0;
+  double imagResult = 0.0;
+  bool has_complex = false; // Flag to determine result type
 
   // preconditions
   if(nargs_equal(args,1)){
     if(args[0].isHeadNumber()){
-      result = -args[0].head().asNumber();
+      realResult = -args[0].head().asNumber();
+    }
+    else if(args[0].isHeadComplex()){
+      realResult = -args[0].head().asComplex().real();
+      imagResult = -args[0].head().asComplex().imag();
+	  has_complex = true;
     }
     else{
       throw SemanticError("Error in call to negate: invalid argument.");
@@ -88,7 +97,12 @@ Expression subneg(const std::vector<Expression> & args){
   }
   else if(nargs_equal(args,2)){
     if( (args[0].isHeadNumber()) && (args[1].isHeadNumber()) ){
-      result = args[0].head().asNumber() - args[1].head().asNumber();
+      realResult = args[0].head().asNumber() - args[1].head().asNumber();
+    }
+	else if( (args[0].isHeadComplex()) && (args[1].isHeadComplex()) ){
+      realResult = args[0].head().asComplex().real() - args[1].head().asComplex().real();
+      imagResult = args[0].head().asComplex().imag() - args[1].head().asComplex().imag();
+	  has_complex = true;
     }
     else{      
       throw SemanticError("Error in call to subtraction: invalid argument.");
@@ -98,7 +112,12 @@ Expression subneg(const std::vector<Expression> & args){
     throw SemanticError("Error in call to subtraction or negation: invalid number of arguments.");
   }
 
-  return Expression(result);
+  if(has_complex){
+	  return Expression(std::complex<double> (realResult, imagResult));
+  }
+  else{
+	  return Expression(realResult);
+  }
 };
 
 Expression div(const std::vector<Expression> & args){
