@@ -161,8 +161,8 @@ Expression div(const std::vector<Expression> & args)
   }
 };
 
-Expression sqrt(const std::vector<Expression> & args) {
-
+Expression sqrt(const std::vector<Expression> & args)
+{
 	// The square root of a Complex argument or a negative Number argument
 	std::complex<double> result = (0.0); 
 	bool is_complex = false; // Flag to determine result type
@@ -191,10 +191,12 @@ Expression sqrt(const std::vector<Expression> & args) {
 	}
 };
 
-Expression a_pow_b(const std::vector<Expression> & args) {
-
-	double result = 0;
-
+Expression a_pow_b(const std::vector<Expression> & args)
+{
+	// The result should be of type Number only when both arguments are of type Number
+	std::complex<double> result = (0.0);
+	bool is_complex = false; // Flag to determine result type
+	
 	if (nargs_equal(args, 2)) {
 		if (args[0].isHeadNumber() && args[1].isHeadNumber()) {
 			// Store values in local variable for readability
@@ -209,6 +211,13 @@ Expression a_pow_b(const std::vector<Expression> & args) {
 				throw SemanticError("Error in call to a_pow_b: invalid argument.");
 			}
 		}
+		else if ((args[0].isHeadComplex()) || (args[1].isHeadComplex())) {
+			// Store values in local variable for readability
+			std::complex<double> a = args[0].head().asComplex();
+			std::complex<double> b = args[1].head().asComplex();
+			result = std::pow(a, b);
+			is_complex = true;
+		}
 		else {
 			throw SemanticError("Error in call to a_pow_b: invalid argument.");
 		}
@@ -216,7 +225,13 @@ Expression a_pow_b(const std::vector<Expression> & args) {
 	else {
 		throw SemanticError("Error in call to a_pow_b: invalid number of arguments.");
 	}
-	return Expression(result);
+	
+	if (is_complex) {
+		return Expression(result);
+	}
+	else {
+		return Expression(result.real());
+	}
 };
 
 Expression nat_log(const std::vector<Expression> & args) {
