@@ -358,6 +358,26 @@ Expression get_arg(const std::vector<Expression> & args)
   return Expression(result);
 };
 
+Expression get_conj(const std::vector<Expression> & args)
+{
+  // The conjugate of a Complex argument
+	std::complex<double> result = (0.0);
+  
+  if(nargs_equal(args,1)){
+    if(args[0].isHeadComplex()){
+      result = std::conj(args[0].head().asComplex()); // conj is a non-member function of complex
+    }
+    else{      
+      throw SemanticError("Error in call to get argument: invalid argument.");
+    }
+  }
+  else{
+    throw SemanticError("Error in call to get argument: invalid number of arguments.");
+  }
+  
+  return Expression(result);
+};
+
 /***********************************************************************
 Built-In Symbols
 **********************************************************************/
@@ -495,4 +515,7 @@ void Environment::reset(){
 
   // Procedure: arg;
   envmap.emplace("arg", EnvResult(ProcedureType, get_arg));
+
+  // Procedure: conj;
+  envmap.emplace("conj", EnvResult(ProcedureType, get_conj));
 }
