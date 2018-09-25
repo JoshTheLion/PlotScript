@@ -58,7 +58,7 @@ public:
   /// value of Atom as a number, returns empty-string if not a Symbol
   std::string asSymbol() const noexcept;
 
-  /// value of Atom as a complex number, return 0 if not a Complex
+  /// value of Atom as a complex number, return 0 if not a Complex or Number
   std::complex<double> asComplex() const noexcept;
 
   /// equality comparison based on type and value

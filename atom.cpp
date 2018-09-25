@@ -166,7 +166,7 @@ std::complex<double> Atom::asComplex() const noexcept {
 	if(m_type == ComplexKind){
 		result = complexValue;
 	}
-	else if(m_type == NumberKind){ // Shortcut for calculation results
+	else if(m_type == NumberKind){ // Shortcut to convert calculation results
 		result = std::complex<double>(numberValue, 0.0);
 	}
 
