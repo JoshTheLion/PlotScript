@@ -1,5 +1,4 @@
 #include "atom.hpp"
-
 #include <sstream>
 #include <cctype>
 #include <cmath>
@@ -37,13 +36,17 @@ Atom::Atom(const Token & token): Atom(){
   }
   // make sure does not start with number
   else if(!std::isdigit(token.asString()[0])){
-	// is token symbol or complex ?
+	// is token symbol, complex, or list?
 	std::string tempS = token.asString();
 	std::complex<double> IMAG = std::complex<double>(0.0, 1.0);
+	//std::vector<Expression> emptyList;
 
 	if((tempS.length() == 1) && (tempS[0] == 'I')){
 	  setComplex(IMAG);
 	}
+	//if((tempS.length() == 4) && (tempS == "list")){
+	  //setList(emptyList);
+	//}
 	else{
       setSymbol(tempS);
 	}
@@ -147,7 +150,6 @@ double Atom::asNumber() const noexcept{
   return (m_type == NumberKind) ? numberValue : 0.0;  
 }
 
-
 std::string Atom::asSymbol() const noexcept{
 
   std::string result;
@@ -172,6 +174,7 @@ std::complex<double> Atom::asComplex() const noexcept {
 
 	return result;
 }
+
 
 bool Atom::operator==(const Atom & right) const noexcept{
   

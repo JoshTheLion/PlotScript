@@ -307,6 +307,7 @@ Expression tangent(const std::vector<Expression> & args) {
 	return Expression(result);
 };
 
+
 Expression get_real_num(const std::vector<Expression> & args)
 {
   double result = 0.0;
@@ -404,6 +405,51 @@ Expression get_conj(const std::vector<Expression> & args)
   
   return Expression(result);
 };
+
+/*
+In our version lists are created using a built-in procedure list, producing an
+expression of type List, which may hold an arbitrary-sized, ordered, list of
+expressions of any type, including List itself (i.e. it is recursive).
+*/
+Expression make_list(const std::vector<Expression> & args)
+{
+  // Deep copy new List Type Expression from args
+  Expression results;
+  results = Expression(args);
+
+  return Expression(results);
+};
+
+//Add a built-in unary procedure first returning the first expression of the List
+//argument. It is a semantic error if the expression is not a List or is empty.
+Expression first(const std::vector<Expression> & args) { return Expression(); }
+
+//Add a built-in unary procedure rest returning a list staring at the second element
+//of the List argument up to and including the last element. It is a semantic error
+//if the expression is not a List or is empty.
+Expression rest(const std::vector<Expression> & args) { return Expression(); }
+
+//Add a built-in unary procedure length returning the number of items in a List
+//argument as a Number Expression. It is a semantic error if the expression is not
+//a List.
+Expression length(const std::vector<Expression> & args) { return Expression(); }
+
+//Add a built-in binary procedure append that appends the expression of the second
+//argument to the first List argument. It is a semantic error if the first argument
+//is not a List.
+Expression append(const std::vector<Expression> & args) { return Expression(); }
+
+//Add a built-in binary procedure join that joins each of the List arguments into
+//one list. It is a semantic error if any argument is not a List.
+Expression join(const std::vector<Expression> & args) { return Expression(); }
+
+//Add a built-in procedure range that produces a list of Numbers from a lower-bound
+//(the first argument) to an upper-bound (the second argument) in positive increments
+//specified by a third argument. It is a semantic error if any argument is not a
+//Number, the first argument is not less than the second, or the increment is not
+//strictly positive.
+Expression range(const std::vector<Expression> & args) { return Expression(); }
+
 
 /***********************************************************************
 Built-In Symbols
@@ -545,4 +591,7 @@ void Environment::reset(){
 
   // Procedure: conj;
   envmap.emplace("conj", EnvResult(ProcedureType, get_conj));
+
+  // Procedure: list;
+  envmap.emplace("list", EnvResult(ProcedureType, make_list));
 }

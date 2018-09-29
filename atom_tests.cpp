@@ -254,7 +254,7 @@ TEST_CASE( "Test assignment", "[atom]" ) {
   }
 }
 
-TEST_CASE( "test comparison", "[atom]" ) {
+TEST_CASE( "Test comparison", "[atom]" ) {
 
   SECTION("Compare default") {
     {

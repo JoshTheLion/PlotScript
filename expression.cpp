@@ -2,6 +2,7 @@
 
 #include <sstream>
 #include <list>
+#include <vector>
 
 #include "environment.hpp"
 #include "semantic_error.hpp"
@@ -19,6 +20,18 @@ Expression::Expression(const Expression & a){
   m_head = a.m_head;
   for(auto e : a.m_tail){
     m_tail.push_back(e);
+  }
+}
+
+// List Type constructor: Called by "list" Procedure
+Expression::Expression(const std::vector<Expression> & list){
+
+  m_head = Atom("list");
+
+  // Deep copy each Expression passed and append to new List Type Expression
+  for(auto exp : list){
+    Expression entry = Expression(exp);
+	m_tail.push_back(entry);
   }
 }
 
@@ -51,11 +64,15 @@ bool Expression::isHeadNumber() const noexcept{
 
 bool Expression::isHeadSymbol() const noexcept{
   return m_head.isSymbol();
-}  
+}
 
 bool Expression::isHeadComplex() const noexcept{
   return m_head.isComplex();
-} 
+}
+
+bool Expression::isHeadList() const noexcept{
+  return ((m_head.isSymbol()) && (m_head.asSymbol() == "list"));
+}
 
 void Expression::append(const Atom & a){
   m_tail.emplace_back(a);
@@ -102,13 +119,13 @@ Expression apply(const Atom & op, const std::vector<Expression> & args, const En
 Expression Expression::handle_lookup(const Atom & head, const Environment & env){
     if(head.isSymbol()){ // if symbol is in env return value
       if(env.is_exp(head)){
-	return env.get_exp(head);
+	    return env.get_exp(head);
       }
       else{
-	throw SemanticError("Error during evaluation: unknown symbol");
+	    throw SemanticError("Error during evaluation: unknown symbol");
       }
     }
-    else if(head.isNumber() || head.isComplex()){
+    else if(head.isNumber() || head.isComplex()){ // if literal is in env return value
       return Expression(head);
     }
     else{
@@ -172,7 +189,7 @@ Expression Expression::handle_define(Environment & env){
 // this limits the practical depth of our AST
 Expression Expression::eval(Environment & env){
   
-  if(m_tail.empty()){
+  if( (m_tail.empty()) && (!isHeadList()) ){ //Base Case
     return handle_lookup(m_head, env);
   }
   // handle begin special-form
@@ -185,10 +202,11 @@ Expression Expression::eval(Environment & env){
   }
   // else attempt to treat as procedure
   else{ 
-    std::vector<Expression> results;
+    // First: Evaluate/simplify all subtrees
+	std::vector<Expression> results;
     for(Expression::IteratorType it = m_tail.begin(); it != m_tail.end(); ++it){
       results.push_back(it->eval(env));
-    }
+    }// Last: Apply function pointer to sub-tree result
     return apply(m_head, results, env);
   }
 }
@@ -197,7 +215,10 @@ Expression Expression::eval(Environment & env){
 std::ostream & operator<<(std::ostream & out, const Expression & exp){
 
   out << "(";
-  out << exp.head();
+  
+  if(!exp.isHeadList()){
+    out << exp.head();
+  }
 
   for(auto e = exp.tailConstBegin(); e != exp.tailConstEnd(); ++e){
     out << *e;

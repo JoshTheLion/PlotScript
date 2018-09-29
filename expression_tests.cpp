@@ -8,6 +8,7 @@ TEST_CASE( "Test default expression", "[expression]" ) {
 
   REQUIRE(!exp.isHeadNumber());
   REQUIRE(!exp.isHeadSymbol());
+  REQUIRE(!exp.isHeadComplex());
 }
 
 TEST_CASE( "Test double expression", "[expression]" ) {
@@ -16,6 +17,7 @@ TEST_CASE( "Test double expression", "[expression]" ) {
 
   REQUIRE(exp.isHeadNumber());
   REQUIRE(!exp.isHeadSymbol());
+  REQUIRE(!exp.isHeadComplex());
 }
 
 
@@ -25,5 +27,15 @@ TEST_CASE( "Test symbol expression", "[expression]" ) {
 
   REQUIRE(!exp.isHeadNumber());
   REQUIRE(exp.isHeadSymbol());
+  REQUIRE(!exp.isHeadComplex());
+}
+
+TEST_CASE( "Test complex expression", "[expression]" ) {
+
+  Expression exp(Atom(std::complex<double>(0.0, 1.0)));
+
+  REQUIRE(!exp.isHeadNumber());
+  REQUIRE(!exp.isHeadSymbol());
+  REQUIRE(exp.isHeadComplex());
 }
 
