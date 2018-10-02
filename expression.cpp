@@ -219,9 +219,13 @@ std::ostream & operator<<(std::ostream & out, const Expression & exp){
   if(!exp.isHeadList()){
     out << exp.head();
   }
-
+  
+  // Print each List entry preceded by a space, except for the first entry
   for(auto e = exp.tailConstBegin(); e != exp.tailConstEnd(); ++e){
-    out << *e;
+	if(e != exp.tailConstBegin()){
+	  out << " ";
+	}
+	out << *e;
   }
 
   out << ")";

@@ -10,8 +10,6 @@ Defines the Atom type and associated functions.
 #include <list>
 #include <vector>
  
-// forward declare Expression
-class Expression;
 
 /*! \class Atom
 \brief A variant type that may be a Number or Symbol or Complex or the default type None.
