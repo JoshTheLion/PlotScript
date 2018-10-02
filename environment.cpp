@@ -445,7 +445,7 @@ Expression first(const std::vector<Expression> & args)
   
 	return result;
 }
-
+/*
 //Add a built-in unary procedure rest returning a list staring at the second element
 //of the List argument up to and including the last element. It is a semantic error
 //if the expression is not a List or is empty.
@@ -464,13 +464,47 @@ Expression append(const std::vector<Expression> & args) { return Expression(); }
 //Add a built-in binary procedure join that joins each of the List arguments into
 //one list. It is a semantic error if any argument is not a List.
 Expression join(const std::vector<Expression> & args) { return Expression(); }
-
+*/
 //Add a built-in procedure range that produces a list of Numbers from a lower-bound
 //(the first argument) to an upper-bound (the second argument) in positive increments
 //specified by a third argument. It is a semantic error if any argument is not a
 //Number, the first argument is not less than the second, or the increment is not
 //strictly positive.
-Expression range(const std::vector<Expression> & args) { return Expression(); }
+Expression range(const std::vector<Expression> & args)
+{
+	std::vector<Expression> results;
+
+	if(nargs_equal(args,3)) {
+		if((args[0].isHeadNumber()) && (args[1].isHeadNumber()) && (args[2].isHeadNumber())){
+			// Store values in local variables for readability
+			double low = args[0].head().asNumber();
+			double high = args[1].head().asNumber();
+			double inc = args[2].head().asNumber();
+			
+			if(low < high) {
+				if(inc > 0) {
+					for (double sum = low; sum <= high; sum += inc) {
+						results.push_back(Atom(sum));
+					}
+				}
+				else {
+					throw SemanticError("Error: negative or zero increment in range");
+				}
+			}
+			else {
+				throw SemanticError("Error: begin greater than end in range");
+			}
+		}
+		else {      
+			throw SemanticError("Error: invalid arguments in range");
+		}
+	}
+	else {
+		throw SemanticError("Error: invalid number of arguments in range");
+	}
+  
+	return Expression(results);
+}
 
 
 /***********************************************************************
@@ -619,4 +653,7 @@ void Environment::reset(){
 
   // Procedure: first;
   envmap.emplace("first", EnvResult(ProcedureType, first));
+
+  // Procedure: range;
+  envmap.emplace("range", EnvResult(ProcedureType, range));
 }
