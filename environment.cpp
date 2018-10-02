@@ -422,7 +422,29 @@ Expression make_list(const std::vector<Expression> & args)
 
 //Add a built-in unary procedure first returning the first expression of the List
 //argument. It is a semantic error if the expression is not a List or is empty.
-Expression first(const std::vector<Expression> & args) { return Expression(); }
+Expression first(const std::vector<Expression> & args)
+{
+	Expression result;
+	
+	if(nargs_equal(args,1)){
+		if(args[0].isHeadList()){
+			if(args[0].tailConstBegin() != args[0].tailConstEnd()){
+				result = *(args[0].tailConstBegin());
+			}
+			else{
+				throw SemanticError("Error: argument to first is an empty list");
+			}
+		}
+		else{      
+			throw SemanticError("Error: argument to first is not a list");
+		}
+	}
+	else{
+		throw SemanticError("Error: invalid number of arguments in call to first");
+	}
+  
+	return result;
+}
 
 //Add a built-in unary procedure rest returning a list staring at the second element
 //of the List argument up to and including the last element. It is a semantic error
@@ -594,4 +616,7 @@ void Environment::reset(){
 
   // Procedure: list;
   envmap.emplace("list", EnvResult(ProcedureType, make_list));
+
+  // Procedure: first;
+  envmap.emplace("first", EnvResult(ProcedureType, first));
 }
