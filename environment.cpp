@@ -477,7 +477,24 @@ Expression get_rest(const std::vector<Expression> & args)
 //Add a built-in unary procedure length returning the number of items in a List
 //argument as a Number Expression. It is a semantic error if the expression is not
 //a List.
-Expression length(const std::vector<Expression> & args) { return Expression(); }
+Expression get_length(const std::vector<Expression> & args)
+{
+	double result = 0.0;
+	
+	if(nargs_equal(args,1)) {
+		if(args[0].isHeadList()) {
+			result = args[0].asList().size();
+		}
+		else {      
+			throw SemanticError("Error: argument to length is not a list");
+		}
+	}
+	else {
+		throw SemanticError("Error: invalid number of arguments in call to length");
+	}
+  
+	return Expression(result);
+}
 
 //Add a built-in binary procedure append that appends the expression of the second
 //argument to the first List argument. It is a semantic error if the first argument
@@ -679,6 +696,9 @@ void Environment::reset(){
 
   // Procedure: rest;
   envmap.emplace("rest", EnvResult(ProcedureType, get_rest));
+
+  // Procedure: length;
+  envmap.emplace("length", EnvResult(ProcedureType, get_length));
 
   // Procedure: range;
   envmap.emplace("range", EnvResult(ProcedureType, make_range));
