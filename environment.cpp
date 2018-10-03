@@ -499,7 +499,25 @@ Expression get_length(const std::vector<Expression> & args)
 //Add a built-in binary procedure append that appends the expression of the second
 //argument to the first List argument. It is a semantic error if the first argument
 //is not a List.
-Expression append(const std::vector<Expression> & args) { return Expression(); }
+Expression make_append(const std::vector<Expression> & args)
+{
+	std::vector<Expression> result;
+
+	if(nargs_equal(args, 2)) {
+		if(args[0].isHeadList()) {
+			result = args[0].asList();
+			result.push_back(args[1]);
+		}
+		else {
+			throw SemanticError("Error: first argument to append is not a list");
+		}
+	}
+	else {
+		throw SemanticError("Error: invalid number of arguments in call to append");
+	}
+
+	return Expression(result);
+}
 
 //Add a built-in binary procedure join that joins each of the List arguments into
 //one list. It is a semantic error if any argument is not a List.
@@ -699,6 +717,9 @@ void Environment::reset(){
 
   // Procedure: length;
   envmap.emplace("length", EnvResult(ProcedureType, get_length));
+
+  // Procedure: append;
+  envmap.emplace("append", EnvResult(ProcedureType, make_append));
 
   // Procedure: range;
   envmap.emplace("range", EnvResult(ProcedureType, make_range));
