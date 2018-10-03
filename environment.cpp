@@ -521,7 +521,31 @@ Expression make_append(const std::vector<Expression> & args)
 
 //Add a built-in binary procedure join that joins each of the List arguments into
 //one list. It is a semantic error if any argument is not a List.
-Expression join(const std::vector<Expression> & args) { return Expression(); }
+Expression make_join(const std::vector<Expression> & args)
+{
+	std::vector<Expression> result;
+	std::vector<Expression> listArgs;
+
+	if(nargs_equal(args, 2)) {
+		if( (args[0].isHeadList()) && (args[1].isHeadList()) ) {
+			// Store values in local variable for readability
+			result = args[0].asList();
+			listArgs = args[1].asList();
+			
+			for (auto & exp : listArgs) {
+				result.push_back(exp);
+			}
+		}
+		else {
+			throw SemanticError("Error: argument to join is not a list");
+		}
+	}
+	else {
+		throw SemanticError("Error: invalid number of arguments in call to join");
+	}
+
+	return Expression(result);
+}
 
 //Add a built-in procedure range that produces a list of Numbers from a lower-bound
 //(the first argument) to an upper-bound (the second argument) in positive increments
@@ -720,6 +744,9 @@ void Environment::reset(){
 
   // Procedure: append;
   envmap.emplace("append", EnvResult(ProcedureType, make_append));
+
+  // Procedure: join;
+  envmap.emplace("join", EnvResult(ProcedureType, make_join));
 
   // Procedure: range;
   envmap.emplace("range", EnvResult(ProcedureType, make_range));
