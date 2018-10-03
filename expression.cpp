@@ -74,6 +74,17 @@ bool Expression::isHeadList() const noexcept{
   return ((m_head.isSymbol()) && (m_head.asSymbol() == "list"));
 }
 
+std::vector<Expression> Expression::asList() const noexcept{
+  
+  std::vector<Expression> result;
+  
+  if(isHeadList()){
+	  result = m_tail;
+  }
+
+  return result;
+}
+
 void Expression::append(const Atom & a){
   m_tail.emplace_back(a);
 }

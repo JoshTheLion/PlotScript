@@ -72,6 +72,9 @@ public:
   /// convienience member to determine if head atom is a list
   bool isHeadList() const noexcept;
 
+  /// value of Expression as a List vector, return empty List vector if not a List
+  std::vector<Expression> asList() const noexcept;
+
   /// Evaluate expression using a post-order traversal (recursive)
   Expression eval(Environment & env);
 

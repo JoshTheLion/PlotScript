@@ -396,11 +396,11 @@ Expression get_conj(const std::vector<Expression> & args)
       result = std::conj(args[0].head().asComplex()); // conj is a non-member function of complex
     }
     else{      
-      throw SemanticError("Error in call to get argument: invalid argument.");
+      throw SemanticError("Error in call to get conjugate: invalid argument.");
     }
   }
   else{
-    throw SemanticError("Error in call to get argument: invalid number of arguments.");
+    throw SemanticError("Error in call to get conjugate: invalid number of arguments.");
   }
   
   return Expression(result);
@@ -422,14 +422,14 @@ Expression make_list(const std::vector<Expression> & args)
 
 //Add a built-in unary procedure first returning the first expression of the List
 //argument. It is a semantic error if the expression is not a List or is empty.
-Expression first(const std::vector<Expression> & args)
+Expression get_first(const std::vector<Expression> & args)
 {
 	Expression result;
 	
 	if(nargs_equal(args,1)){
 		if(args[0].isHeadList()){
-			if(args[0].tailConstBegin() != args[0].tailConstEnd()){
-				result = *(args[0].tailConstBegin());
+			if(!args[0].asList().empty()){
+				result = args[0].asList().front();
 			}
 			else{
 				throw SemanticError("Error: argument to first is an empty list");
@@ -445,11 +445,34 @@ Expression first(const std::vector<Expression> & args)
   
 	return result;
 }
-/*
+
 //Add a built-in unary procedure rest returning a list staring at the second element
 //of the List argument up to and including the last element. It is a semantic error
 //if the expression is not a List or is empty.
-Expression rest(const std::vector<Expression> & args) { return Expression(); }
+Expression get_rest(const std::vector<Expression> & args)
+{
+	std::vector<Expression> result;
+
+	if(nargs_equal(args,1)){
+		if(args[0].isHeadList()){
+			if(!args[0].asList().empty()){
+				result = args[0].asList();
+				result.erase(result.begin());
+			}
+			else{
+				throw SemanticError("Error: argument to rest is an empty list");
+			}
+		}
+		else{      
+			throw SemanticError("Error: argument to rest is not a list");
+		}
+	}
+	else{
+		throw SemanticError("Error: invalid number of arguments in call to rest");
+	}
+
+	return Expression(result);
+}
 
 //Add a built-in unary procedure length returning the number of items in a List
 //argument as a Number Expression. It is a semantic error if the expression is not
@@ -464,13 +487,13 @@ Expression append(const std::vector<Expression> & args) { return Expression(); }
 //Add a built-in binary procedure join that joins each of the List arguments into
 //one list. It is a semantic error if any argument is not a List.
 Expression join(const std::vector<Expression> & args) { return Expression(); }
-*/
+
 //Add a built-in procedure range that produces a list of Numbers from a lower-bound
 //(the first argument) to an upper-bound (the second argument) in positive increments
 //specified by a third argument. It is a semantic error if any argument is not a
 //Number, the first argument is not less than the second, or the increment is not
 //strictly positive.
-Expression range(const std::vector<Expression> & args)
+Expression make_range(const std::vector<Expression> & args)
 {
 	std::vector<Expression> results;
 
@@ -652,8 +675,11 @@ void Environment::reset(){
   envmap.emplace("list", EnvResult(ProcedureType, make_list));
 
   // Procedure: first;
-  envmap.emplace("first", EnvResult(ProcedureType, first));
+  envmap.emplace("first", EnvResult(ProcedureType, get_first));
+
+  // Procedure: rest;
+  envmap.emplace("rest", EnvResult(ProcedureType, get_rest));
 
   // Procedure: range;
-  envmap.emplace("range", EnvResult(ProcedureType, range));
+  envmap.emplace("range", EnvResult(ProcedureType, make_range));
 }
