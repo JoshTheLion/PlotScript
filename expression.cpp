@@ -23,8 +23,8 @@ Expression::Expression(const Expression & a){
   }
 }
 
-// List Type constructor: Called by "list" Procedure
-Expression::Expression(const std::vector<Expression> & list){
+// List Type constructor
+Expression::Expression(const List & list){
 
   m_head = Atom("list");
 
@@ -33,6 +33,16 @@ Expression::Expression(const std::vector<Expression> & list){
     Expression entry = Expression(exp);
 	m_tail.push_back(entry);
   }
+}
+
+// Lambda Type constructor
+Expression::Expression(const List & parameters, const Expression & function){
+
+  m_head = Atom("lambda");
+
+  // Combine both arguments into new Lambda Type Expression
+  m_tail.push_back(parameters);
+  m_tail.push_back(function);
 }
 
 Expression & Expression::operator=(const Expression & a){
@@ -58,6 +68,10 @@ const Atom & Expression::head() const{
   return m_head;
 }
 
+bool Expression::isTailEmpty() const noexcept{
+  return m_tail.empty();
+}
+
 bool Expression::isHeadNumber() const noexcept{
   return m_head.isNumber();
 }
@@ -74,9 +88,13 @@ bool Expression::isHeadList() const noexcept{
   return ((m_head.isSymbol()) && (m_head.asSymbol() == "list"));
 }
 
-std::vector<Expression> Expression::asList() const noexcept{
+bool Expression::isHeadLambda() const noexcept{
+  return ((m_head.isSymbol()) && (m_head.asSymbol() == "lambda"));
+}
+
+Expression::List Expression::asList() const noexcept{
   
-  std::vector<Expression> result;
+  List result;
   
   if(isHeadList()){
 	  result = m_tail;
@@ -174,7 +192,7 @@ Expression Expression::handle_define(Environment & env){
 
   // but tail[0] must not be a special-form or procedure
   std::string s = m_tail[0].head().asSymbol();
-  if((s == "define") || (s == "begin")){
+  if((s == "define") || (s == "begin") || (s == "lambda")){
     throw SemanticError("Error during evaluation: attempt to redefine a special-form");
   }
   
@@ -195,6 +213,57 @@ Expression Expression::handle_define(Environment & env){
   return result;
 }
 
+/*
+ * The lambda special-form has two arguments. The first argument is a
+ * parenthetical list of symbols that are the lambda function arguments
+ * (parameters or inputs). The second argument is an expression.
+ * Note this expression is not evaluated and may use arbitrary symbols
+ * including the arguments.
+ * 
+ * The lambda special-form should return an Expression of type Procedure.
+ * Once defined such a procedure can be called the same way as built-in
+ * ones.
+*/
+Expression Expression::handle_lambda(/*Environment & env*/) {
+  // tail must have 2 arguments or error
+  if(m_tail.size() != 2){
+    throw SemanticError("Error during evaluation: invalid number of arguments to lambda");
+  }
+  
+  // tail[0] must be list of symbols
+  if(!m_tail[0].head().isSymbol()){
+    throw SemanticError("Error during evaluation: first argument to lambda not a symbol");
+  }
+
+  // Must convert tail[0] into a List of Symbols to store
+  List params = { m_tail[0].head() };
+
+  for(auto exp : m_tail[0].m_tail) {
+    // Check each parameter is a symbol
+	if(exp.head().isSymbol()){
+	  params.push_back(exp);
+
+	}
+	else {
+	  throw SemanticError("Error during evaluation: first argument to lambda is invalid");
+	}
+  }
+  
+  // Store tail[1] Expression for procedure
+  Expression function(m_tail[1]);
+
+  // Combine into one output Expression
+  return Expression(params, function);
+  
+  /*
+  // make compiler happy we used this parameter
+  Procedure proc = env.get_proc(Atom("null"));
+  
+  // call proc with args
+  return proc(m_tail[1].m_tail);
+  */
+}
+
 // this is a simple recursive version. the iterative version is more
 // difficult with the ast data structure used (no parent pointer).
 // this limits the practical depth of our AST
@@ -210,6 +279,10 @@ Expression Expression::eval(Environment & env){
   // handle define special-form
   else if(m_head.isSymbol() && m_head.asSymbol() == "define"){
     return handle_define(env);
+  }
+  // handle lambda special-form
+  else if(m_head.isSymbol() && m_head.asSymbol() == "lambda"){
+    return handle_lambda(/*env*/);
   }
   // else attempt to treat as procedure
   else{ 
@@ -227,8 +300,11 @@ std::ostream & operator<<(std::ostream & out, const Expression & exp){
 
   out << "(";
   
-  if(!exp.isHeadList()){
+  if( (!exp.isHeadList()) && (!exp.isHeadLambda()) ){
     out << exp.head();
+	if(!exp.isTailEmpty()){
+	  out << " ";
+	}
   }
   
   // Print each List entry preceded by a space, except for the first entry

@@ -23,6 +23,7 @@ list of expressions called the tail.
 class Expression {
 public:
 
+  typedef std::vector<Expression> List;
   typedef std::vector<Expression>::const_iterator ConstIteratorType;
 
   /// Default construct and Expression, whose type in NoneType
@@ -37,7 +38,10 @@ public:
   Expression(const Expression & a);
 
   // List Type constructor: Called by "list" Procedure
-  Expression(const std::vector<Expression> & list);
+  Expression(const List & list);
+  
+  // Lambda Type constructor
+  Expression(const List & parameters, const Expression & function);
 
   /// deep-copy assign an expression  (recursive)
   Expression & operator=(const Expression & a);
@@ -60,6 +64,9 @@ public:
   /// return a const-iterator to the tail end
   ConstIteratorType tailConstEnd() const noexcept;
 
+  /// convienience member to determine if tail is empty
+  bool isTailEmpty() const noexcept;
+
   /// convienience member to determine if head atom is a number
   bool isHeadNumber() const noexcept;
 
@@ -72,8 +79,11 @@ public:
   /// convienience member to determine if head atom is a list
   bool isHeadList() const noexcept;
 
+  /// convienience member to determine if head atom is a lambda
+  bool isHeadLambda() const noexcept;
+
   /// value of Expression as a List vector, return empty List vector if not a List
-  std::vector<Expression> asList() const noexcept;
+  List asList() const noexcept;
 
   /// Evaluate expression using a post-order traversal (recursive)
   Expression eval(Environment & env);
@@ -97,6 +107,7 @@ private:
   Expression handle_lookup(const Atom & head, const Environment & env);
   Expression handle_define(Environment & env);
   Expression handle_begin(Environment & env);
+  Expression handle_lambda(/*Environment & env*/);
 };
 
 /// Render expression to output stream
