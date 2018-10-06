@@ -27,12 +27,7 @@ Expression::Expression(const Expression & a){
 Expression::Expression(const List & list){
 
   m_head = Atom("list");
-
-  // Deep copy each Expression passed and append to new List Type Expression
-  for(auto exp : list){
-    Expression entry = Expression(exp);
-	m_tail.push_back(entry);
-  }
+  m_tail = list;
 }
 
 // Lambda Type constructor
@@ -41,7 +36,7 @@ Expression::Expression(const List & parameters, const Expression & function){
   m_head = Atom("lambda");
 
   // Combine both arguments into new Lambda Type Expression
-  m_tail.push_back(parameters);
+  m_tail.push_back(Expression(parameters)); 
   m_tail.push_back(function);
 }
 
@@ -133,6 +128,14 @@ Expression apply(const Atom & op, const std::vector<Expression> & args, const En
     throw SemanticError("Error during evaluation: procedure name not symbol");
   }
   
+  if(env.is_exp(op)){
+    Expression mappedExp = env.get_exp(op);
+	if(mappedExp.isHeadLambda()){
+	  // Shadow Method
+	  throw SemanticError("Error: Josh is a genious!");
+	}
+  }
+
   // must map to a proc
   if(!env.is_proc(op)){
     throw SemanticError("Error during evaluation: symbol does not name a procedure");
@@ -162,6 +165,9 @@ Expression Expression::handle_lookup(const Atom & head, const Environment & env)
     }
 }
 
+/* (begin <expression> <expression> ...) evaluates each expression in order,
+ * evaluating to the last.
+ */
 Expression Expression::handle_begin(Environment & env){
   
   if(m_tail.size() == 0){
@@ -177,7 +183,12 @@ Expression Expression::handle_begin(Environment & env){
   return result;
 }
 
-
+/*
+ * (define <symbol> <expression>) adds a mapping from the symbol to the
+ * result of the expression in the environment. It is an error to redefine
+ * a symbol. This evaluates to the expression the symbol is defined as (maps
+ * to in the environment).
+ */
 Expression Expression::handle_define(Environment & env){
 
   // tail must have size 3 or error
@@ -213,7 +224,7 @@ Expression Expression::handle_define(Environment & env){
   return result;
 }
 
-/*
+/* (lambda <list> <expression>)
  * The lambda special-form has two arguments. The first argument is a
  * parenthetical list of symbols that are the lambda function arguments
  * (parameters or inputs). The second argument is an expression.
@@ -254,14 +265,6 @@ Expression Expression::handle_lambda(/*Environment & env*/) {
 
   // Combine into one output Expression
   return Expression(params, function);
-  
-  /*
-  // make compiler happy we used this parameter
-  Procedure proc = env.get_proc(Atom("null"));
-  
-  // call proc with args
-  return proc(m_tail[1].m_tail);
-  */
 }
 
 // this is a simple recursive version. the iterative version is more
