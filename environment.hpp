@@ -19,6 +19,7 @@ needed.
 #include <complex.h>
 #include <complex>
 #include <list>
+#include <string>
 
 /*! \typedef Procedure
 \brief A Procedure is a C++ function pointer taking a vector of 
@@ -45,6 +46,9 @@ public:
   /*! Construct the default environment with built-in procedures and
    * definitions. */
   Environment();
+  
+  // Copy constructor for Lambda
+  Environment(const Environment & env);
 
   /*! Determine if a symbol is known to the environment.
     \param sym the sumbol to lookup
@@ -107,6 +111,9 @@ private:
 
   // the environment map
   std::map<std::string, EnvResult> envmap;
+
+  // Flag to allow overwriting variables in Lambda shadow Environment
+  bool isLambda;
 };
 
 #endif

@@ -121,31 +121,35 @@ Expression::ConstIteratorType Expression::tailConstEnd() const noexcept{
   return m_tail.cend();
 }
 
-Expression apply(const Atom & op, const std::vector<Expression> & args, const Environment & env){
+Expression Expression::apply(const Atom & op, const List & args, const Environment & env){
 
   // head must be a symbol
   if(!op.isSymbol()){
     throw SemanticError("Error during evaluation: procedure name not symbol");
   }
   
+  // Check if head maps to a lambda proc
   if(env.is_exp(op)){
-    Expression mappedExp = env.get_exp(op);
+    // Check expression the symbol maps to
+	Expression mappedExp = env.get_exp(op);
 	if(mappedExp.isHeadLambda()){
 	  // Shadow Method
-	  throw SemanticError("Error: Josh is a genious!");
+	  return call_lambda(mappedExp, args, env);
+	  //throw SemanticError("Error: Josh is a genious!");
 	}
   }
-
-  // must map to a proc
-  if(!env.is_proc(op)){
+  // must map to a built-in proc
+  else if(env.is_proc(op)){
+    // map from symbol to proc
+    Procedure proc = env.get_proc(op);
+  
+    // call proc with args
+    return proc(args);
+  }
+  else{
     throw SemanticError("Error during evaluation: symbol does not name a procedure");
   }
-  
-  // map from symbol to proc
-  Procedure proc = env.get_proc(op);
-  
-  // call proc with args
-  return proc(args);
+  return Expression();
 }
 
 Expression Expression::handle_lookup(const Atom & head, const Environment & env){
@@ -191,7 +195,7 @@ Expression Expression::handle_begin(Environment & env){
  */
 Expression Expression::handle_define(Environment & env){
 
-  // tail must have size 3 or error
+  // tail must have two arguments or error
   if(m_tail.size() != 2){
     throw SemanticError("Error during evaluation: invalid number of arguments to define");
   }
@@ -214,10 +218,11 @@ Expression Expression::handle_define(Environment & env){
   // eval tail[1]
   Expression result = m_tail[1].eval(env);
 
-  if(env.is_exp(m_head)){
+  // Only user-defined functions can be overriden
+  if( (env.is_exp(m_head)) && (!env.get_exp(m_head).isHeadLambda()) ){
     throw SemanticError("Error during evaluation: attempt to redefine a previously defined symbol");
   }
-    
+
   //and add to env
   env.add_exp(m_tail[0].head(), result);
   
@@ -235,7 +240,7 @@ Expression Expression::handle_define(Environment & env){
  * Once defined such a procedure can be called the same way as built-in
  * ones.
 */
-Expression Expression::handle_lambda(/*Environment & env*/) {
+Expression Expression::handle_lambda() {
   // tail must have 2 arguments or error
   if(m_tail.size() != 2){
     throw SemanticError("Error during evaluation: invalid number of arguments to lambda");
@@ -256,7 +261,7 @@ Expression Expression::handle_lambda(/*Environment & env*/) {
 
 	}
 	else {
-	  throw SemanticError("Error during evaluation: first argument to lambda is invalid");
+	  throw SemanticError("Error during evaluation: an argument to lambda is invalid");
 	}
   }
   
@@ -285,7 +290,7 @@ Expression Expression::eval(Environment & env){
   }
   // handle lambda special-form
   else if(m_head.isSymbol() && m_head.asSymbol() == "lambda"){
-    return handle_lambda(/*env*/);
+    return handle_lambda();
   }
   // else attempt to treat as procedure
   else{ 
@@ -298,6 +303,44 @@ Expression Expression::eval(Environment & env){
   }
 }
 
+// Use values passed into Lambda Parameters by the anonymous function call to
+// evaluate user-defined procedure, calculate resulting value
+Expression Expression::call_lambda(Expression & lambda, const List & args, const Environment & env){
+	
+	// Make it easier to access arguments (I'll change later)
+	List argsIn = Expression(args).asList();
+
+	// Extract lambda pieces
+	List params = lambda.m_tail[0].m_tail;
+	Expression function = lambda.m_tail[1];
+
+	// Function call must match number of defined arguments or error
+    if(params.size() != argsIn.size()) {
+		throw SemanticError("Error during evaluation: invalid number of arguments to call lambda function");
+    }
+
+	// Copy construct a new temporary Environment for Lambda evaluation
+	Environment shadowEnv(env);
+
+	// Set up restructured AST for evaluation with: (begin <expression> <expression> ...)
+	Expression shadowAST(Atom("begin"));
+
+	// Assign a value to each parameter
+	for(size_t i = 0; i < params.size(); i++) {
+		// Create a new special-form Expression: (define <symbol> <expression>)
+		Expression argDef(Atom("define"));
+		argDef.m_tail = {params[i], argsIn[i]};
+
+		// Add it to the AST
+		shadowAST.m_tail.push_back(argDef);
+	}
+
+	// Lastly, add the stored function definition
+	shadowAST.m_tail.push_back(function);
+	
+	// Evaluate modified AST and return result value to the Main Environment
+	return shadowAST.eval(shadowEnv);
+}
 
 std::ostream & operator<<(std::ostream & out, const Expression & exp){
 

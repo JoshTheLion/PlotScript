@@ -602,8 +602,15 @@ Public Methods
 **********************************************************************/
 
 Environment::Environment(){
-
+  // Default values
+  isLambda = false;
   reset();
+}
+
+Environment::Environment(const Environment & env){
+  // Copy all mapped values using std::map::operator=
+  envmap = env.envmap;
+  isLambda = true;
 }
 
 bool Environment::is_known(const Atom & sym) const{
@@ -636,15 +643,21 @@ Expression Environment::get_exp(const Atom & sym) const{
 void Environment::add_exp(const Atom & sym, const Expression & exp){
 
   if(!sym.isSymbol()){
-    throw SemanticError("Attempt to add non-symbol to environment");
+    throw SemanticError("Error: Attempt to add non-symbol to environment");
   }
-    
+  /*
+  // Override?
+  if(isLambda){
+    envmap.std::map<std::string, EnvResult>::insert_or_assign(sym.asSymbol(), EnvResult(ExpressionType, exp));
+  }
+  */
   // error if overwriting symbol map
-  if(envmap.find(sym.asSymbol()) != envmap.end()){
-    throw SemanticError("Attempt to overwrite symbol in environemnt");
+  else if(envmap.find(sym.asSymbol()) != envmap.end()){
+    throw SemanticError("Error: Attempt to overwrite symbol in environemnt");
   }
-
-  envmap.emplace(sym.asSymbol(), EnvResult(ExpressionType, exp)); 
+  else{
+    envmap.emplace(sym.asSymbol(), EnvResult(ExpressionType, exp));
+  }
 }
 
 bool Environment::is_proc(const Atom & sym) const{

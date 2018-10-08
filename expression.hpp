@@ -87,6 +87,9 @@ public:
 
   /// Evaluate expression using a post-order traversal (recursive)
   Expression eval(Environment & env);
+  
+  // Apply operation to evaluated expression
+  Expression apply(const Atom & op, const List & args, const Environment & env);
 
   /// equality comparison for two expressions (recursive)
   bool operator==(const Expression & exp) const noexcept;
@@ -107,7 +110,8 @@ private:
   Expression handle_lookup(const Atom & head, const Environment & env);
   Expression handle_define(Environment & env);
   Expression handle_begin(Environment & env);
-  Expression handle_lambda(/*Environment & env*/);
+  Expression handle_lambda();
+  Expression call_lambda(Expression & lambda, const List & args, const Environment & env);
 };
 
 /// Render expression to output stream
