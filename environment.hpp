@@ -112,7 +112,7 @@ private:
   // the environment map
   std::map<std::string, EnvResult> envmap;
 
-  // Flag to allow overwriting variables in Lambda shadow Environment
+  // Flag to allow overwriting variables in a Lambda shadow Environment
   bool isLambda;
 };
 

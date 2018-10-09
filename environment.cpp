@@ -645,15 +645,17 @@ void Environment::add_exp(const Atom & sym, const Expression & exp){
   if(!sym.isSymbol()){
     throw SemanticError("Error: Attempt to add non-symbol to environment");
   }
-  /*
-  // Override?
-  if(isLambda){
-    envmap.std::map<std::string, EnvResult>::insert_or_assign(sym.asSymbol(), EnvResult(ExpressionType, exp));
-  }
-  */
+
   // error if overwriting symbol map
-  else if(envmap.find(sym.asSymbol()) != envmap.end()){
-    throw SemanticError("Error: Attempt to overwrite symbol in environemnt");
+  if(envmap.find(sym.asSymbol()) != envmap.end()){
+    if(isLambda){
+      // Override rule
+	  EnvResult newValue(ExpressionType, exp);
+	  std::swap(envmap.at(sym.asSymbol()), newValue);
+	}
+	else{
+	  throw SemanticError("Error: Attempt to overwrite symbol in environemnt");
+	}
   }
   else{
     envmap.emplace(sym.asSymbol(), EnvResult(ExpressionType, exp));

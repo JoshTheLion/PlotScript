@@ -133,9 +133,7 @@ Expression Expression::apply(const Atom & op, const List & args, const Environme
     // Check expression the symbol maps to
 	Expression mappedExp = env.get_exp(op);
 	if(mappedExp.isHeadLambda()){
-	  // Shadow Method
 	  return call_lambda(mappedExp, args, env);
-	  //throw SemanticError("Error: Josh is a genious!");
 	}
   }
   // must map to a built-in proc
@@ -338,7 +336,7 @@ Expression Expression::call_lambda(Expression & lambda, const List & args, const
 	// Lastly, add the stored function definition
 	shadowAST.m_tail.push_back(function);
 	
-	// Evaluate modified AST and return result value to the Main Environment
+	// Evaluate modified AST in Shadow and return result to the Main Environment
 	return shadowAST.eval(shadowEnv);
 }
 

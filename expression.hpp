@@ -23,6 +23,7 @@ list of expressions called the tail.
 class Expression {
 public:
 
+  // convenience typedef
   typedef std::vector<Expression> List;
   typedef std::vector<Expression>::const_iterator ConstIteratorType;
 
@@ -37,7 +38,7 @@ public:
   /// deep-copy construct an expression (recursive)
   Expression(const Expression & a);
 
-  // List Type constructor: Called by "list" Procedure
+  // List Type constructor
   Expression(const List & list);
   
   // Lambda Type constructor
