@@ -72,7 +72,7 @@ Expression mul(const std::vector<Expression> & args)
 	  has_complex = true;
 	}
     else{
-      throw SemanticError("Error in call to mul, argument not a number");
+      throw SemanticError("Error in call to multiply, argument not a number");
     }
   }
 
@@ -87,10 +87,9 @@ Expression mul(const std::vector<Expression> & args)
 Expression subneg(const std::vector<Expression> & args)
 {
   // If any argument is complex, the result should be complex
-  //std::complex<double> result = 0.0;
   double realResult = 0.0;
   double imagResult = 0.0;
-  bool has_complex = false; // Flag to determine result type
+  bool has_complex = false;
 
   // preconditions
   if(nargs_equal(args,1)){
@@ -134,10 +133,22 @@ Expression subneg(const std::vector<Expression> & args)
 Expression div(const std::vector<Expression> & args)
 {
   // If any argument is complex, the result should be complex
-  std::complex<double> result = (1.0);
-  bool has_complex = false; // Flag to determine result type
+  std::complex<double> result = (1.0, 0.0);
+  bool has_complex = false;
 
-  if(nargs_equal(args,2)){
+  if(nargs_equal(args,1)){
+    if(args[0].isHeadNumber()){
+      result = 1/args[0].head().asNumber();
+    }
+    else if(args[0].isHeadComplex()){
+      result = (1.0)/args[0].head().asComplex();
+	  has_complex = true;
+    }
+    else{
+      throw SemanticError("Error in call to division: invalid argument.");
+    }
+  }
+  else if(nargs_equal(args,2)){
     if( (args[0].isHeadNumber()) && (args[1].isHeadNumber()) ){
       result = args[0].head().asNumber() / args[1].head().asNumber();
     }
