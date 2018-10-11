@@ -1,11 +1,11 @@
 #include "expression.hpp"
+#include "environment.hpp"
+#include "semantic_error.hpp"
 
 #include <sstream>
 #include <list>
 #include <vector>
 
-#include "environment.hpp"
-#include "semantic_error.hpp"
 
 Expression::Expression(){}
 
@@ -121,6 +121,7 @@ Expression::ConstIteratorType Expression::tailConstEnd() const noexcept{
   return m_tail.cend();
 }
 
+
 Expression Expression::apply(const Atom & op, const List & args, const Environment & env){
 
   // head must be a symbol
@@ -128,21 +129,20 @@ Expression Expression::apply(const Atom & op, const List & args, const Environme
     throw SemanticError("Error during evaluation: procedure name not symbol");
   }
   
-  // Check if head maps to a lambda proc
-  if(env.is_exp(op)){
-    // Check expression the symbol maps to
-	Expression mappedExp = env.get_exp(op);
-	if(mappedExp.isHeadLambda()){
-	  return call_lambda(mappedExp, args, env);
-	}
-  }
-  // must map to a built-in proc
-  else if(env.is_proc(op)){
+  // Must map to a built-in or user-defined proc
+  if(env.is_proc(op)){
     // map from symbol to proc
     Procedure proc = env.get_proc(op);
-  
+
     // call proc with args
     return proc(args);
+  }
+  else if(env.is_anon_proc(op)){
+    // Get the function the symbol maps to
+	Expression mappedExp = env.get_exp(op);
+
+	// Evaluate function with args
+	return call_lambda(mappedExp, args, env);
   }
   else{
     throw SemanticError("Error during evaluation: symbol does not name a procedure");
@@ -209,7 +209,7 @@ Expression Expression::handle_define(Environment & env){
     throw SemanticError("Error during evaluation: attempt to redefine a special-form");
   }
   
-  if(env.is_proc(m_head)){
+  if((env.is_proc(m_head)) || (s == "apply")){
     throw SemanticError("Error during evaluation: attempt to redefine a built-in procedure");
   }
 	
@@ -217,7 +217,7 @@ Expression Expression::handle_define(Environment & env){
   Expression result = m_tail[1].eval(env);
 
   // Only user-defined functions can be overriden
-  if( (env.is_exp(m_head)) && (!env.get_exp(m_head).isHeadLambda()) ){
+  if( (env.is_exp(m_head)) && (!env.is_anon_proc(m_head)) ){
     throw SemanticError("Error during evaluation: attempt to redefine a previously defined symbol");
   }
 
@@ -256,7 +256,6 @@ Expression Expression::handle_lambda() {
     // Check each parameter is a symbol
 	if(exp.head().isSymbol()){
 	  params.push_back(exp);
-
 	}
 	else {
 	  throw SemanticError("Error during evaluation: an argument to lambda is invalid");
@@ -268,6 +267,48 @@ Expression Expression::handle_lambda() {
 
   // Combine into one output Expression
   return Expression(params, function);
+}
+
+/*
+ * (apply <procedure> <list>)
+ * The apply built-in binary procedure has two arguments. The first argument
+ * is a procedure, the second a list. It treats the elements of the list
+ * as the arguments to the procedure, returning the result after evaluation.
+ */
+Expression Expression::handle_apply(Environment & env){
+  
+  // tail must have 2 arguments or error
+  if(m_tail.size() != 2){
+    throw SemanticError("Error during evaluation: invalid number of arguments to apply");
+  }
+  
+  // tail[0] must be a symbol
+  if( !(m_tail[0].isHeadSymbol() && m_tail[0].isTailEmpty()) ){
+    throw SemanticError("Error during evaluation: first argument to apply is not a Symbol");
+  }
+  
+  // Extract first piece of apply function
+  Atom proc = m_tail[0].head();
+  
+  // tail[0] must be a built-in or user-defined procedure
+  if( !(env.is_proc(proc) || env.is_anon_proc(proc)) ){
+    throw SemanticError("Error during evaluation: first argument to apply is not a Procedure");
+  }
+
+  // tail[1] must be a List of arguments
+  if(!m_tail[1].isHeadList()){
+    throw SemanticError("Error during evaluation: second argument to apply is not a List");
+  }
+  
+  // Extract second piece of apply function
+  List args = m_tail[1].asList();
+  
+  // Set up restructured AST in form: (<procedure> <arg list>)
+  Expression result(proc);
+  result.m_tail = args;
+  
+  // Evaluate result of applied procedure
+  return result.eval(env);
 }
 
 // this is a simple recursive version. the iterative version is more
@@ -290,13 +331,17 @@ Expression Expression::eval(Environment & env){
   else if(m_head.isSymbol() && m_head.asSymbol() == "lambda"){
     return handle_lambda();
   }
+  // handle apply special-form
+  else if(m_head.isSymbol() && m_head.asSymbol() == "apply"){
+    return handle_apply(env);
+  }
   // else attempt to treat as procedure
   else{ 
     // First: Evaluate/simplify all subtrees
 	std::vector<Expression> results;
     for(Expression::IteratorType it = m_tail.begin(); it != m_tail.end(); ++it){
       results.push_back(it->eval(env));
-    }// Last: Apply function pointer to sub-tree result
+    }// Last: Apply sub-tree result to function pointer
     return apply(m_head, results, env);
   }
 }
@@ -320,7 +365,7 @@ Expression Expression::call_lambda(Expression & lambda, const List & args, const
 	// Copy construct a new temporary Environment for Lambda evaluation
 	Environment shadowEnv(env);
 
-	// Set up restructured AST for evaluation with: (begin <expression> <expression> ...)
+	// Set up restructured AST in form: (begin <expression> <expression> ...)
 	Expression shadowAST(Atom("begin"));
 
 	// Assign a value to each parameter

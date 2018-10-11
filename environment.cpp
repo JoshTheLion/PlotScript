@@ -1,11 +1,10 @@
 #include "environment.hpp"
+#include "semantic_error.hpp"
 
 #include <cassert>
 #include <cmath>
 #include <complex>
 
-#include "environment.hpp"
-#include "semantic_error.hpp"
 
 /*********************************************************************** 
 Helper Function(s)
@@ -133,7 +132,7 @@ Expression subneg(const std::vector<Expression> & args)
 Expression div(const std::vector<Expression> & args)
 {
   // If any argument is complex, the result should be complex
-  std::complex<double> result = (1.0, 0.0);
+  std::complex<double> result = (1.0);
   bool has_complex = false;
 
   if(nargs_equal(args,1)){
@@ -417,18 +416,19 @@ Expression get_conj(const std::vector<Expression> & args)
   return Expression(result);
 };
 
+
 /*
 In our version lists are created using a built-in procedure list, producing an
 expression of type List, which may hold an arbitrary-sized, ordered, list of
 expressions of any type, including List itself (i.e. it is recursive).
-*/
+ */
 Expression make_list(const std::vector<Expression> & args)
 {
   // Deep copy new List Type Expression from args
   Expression results;
   results = Expression(args);
 
-  return Expression(results);
+  return results;
 };
 
 //Add a built-in unary procedure first returning the first expression of the List
@@ -455,7 +455,7 @@ Expression get_first(const std::vector<Expression> & args)
 	}
   
 	return result;
-}
+};
 
 //Add a built-in unary procedure rest returning a list staring at the second element
 //of the List argument up to and including the last element. It is a semantic error
@@ -483,7 +483,7 @@ Expression get_rest(const std::vector<Expression> & args)
 	}
 
 	return Expression(result);
-}
+};
 
 //Add a built-in unary procedure length returning the number of items in a List
 //argument as a Number Expression. It is a semantic error if the expression is not
@@ -505,7 +505,7 @@ Expression get_length(const std::vector<Expression> & args)
 	}
   
 	return Expression(result);
-}
+};
 
 //Add a built-in binary procedure append that appends the expression of the second
 //argument to the first List argument. It is a semantic error if the first argument
@@ -528,7 +528,7 @@ Expression make_append(const std::vector<Expression> & args)
 	}
 
 	return Expression(result);
-}
+};
 
 //Add a built-in binary procedure join that joins each of the List arguments into
 //one list. It is a semantic error if any argument is not a List.
@@ -556,7 +556,7 @@ Expression make_join(const std::vector<Expression> & args)
 	}
 
 	return Expression(result);
-}
+};
 
 //Add a built-in procedure range that produces a list of Numbers from a lower-bound
 //(the first argument) to an upper-bound (the second argument) in positive increments
@@ -597,7 +597,7 @@ Expression make_range(const std::vector<Expression> & args)
 	}
   
 	return Expression(results);
-}
+};
 
 
 /***********************************************************************
@@ -660,7 +660,7 @@ void Environment::add_exp(const Atom & sym, const Expression & exp){
   // error if overwriting symbol map
   if(envmap.find(sym.asSymbol()) != envmap.end()){
     if(isLambda){
-      // Override rule
+      // Rule exception
 	  EnvResult newValue(ExpressionType, exp);
 	  std::swap(envmap.at(sym.asSymbol()), newValue);
 	}
@@ -680,9 +680,14 @@ bool Environment::is_proc(const Atom & sym) const{
   return (result != envmap.end()) && (result->second.type == ProcedureType);
 }
 
-Procedure Environment::get_proc(const Atom & sym) const{
+bool Environment::is_anon_proc(const Atom & sym) const{
+  if(!sym.isSymbol()) return false;
 
-  //Procedure proc = default_proc;
+  auto result = envmap.find(sym.asSymbol());
+  return (result != envmap.end()) && (result->second.exp.isHeadLambda());
+}
+
+Procedure Environment::get_proc(const Atom & sym) const{
 
   if(sym.isSymbol()){
     auto result = envmap.find(sym.asSymbol());

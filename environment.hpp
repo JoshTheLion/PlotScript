@@ -16,9 +16,9 @@ needed.
 // module includes
 #include "atom.hpp"
 #include "expression.hpp"
-#include <complex.h>
+
 #include <complex>
-#include <list>
+#include <vector>
 #include <string>
 
 /*! \typedef Procedure
@@ -77,9 +77,15 @@ public:
 
   /*! Determine if a symbol has been defined as a procedure
     \param sym the symbol to lookup
-    \return true if thr symbol maps to a procedure
+    \return true if the symbol maps to a procedure
    */
   bool is_proc(const Atom &sym) const;
+
+  /*! Determine if a symbol has been user-defined as a procedure
+    \param sym the symbol to lookup
+    \return true if the symbol maps to a procedure
+   */
+  bool is_anon_proc(const Atom &sym) const;
 
   /*! Get the Procedure the argument symbol maps to
     \param sym the symbol to lookup

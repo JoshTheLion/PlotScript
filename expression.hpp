@@ -4,12 +4,12 @@ Defines the Expression type and assiciated functions.
 #ifndef EXPRESSION_HPP
 #define EXPRESSION_HPP
 
-#include <string>
-#include <vector>
-#include <list>
-
 #include "token.hpp"
 #include "atom.hpp"
+
+#include <vector>
+#include <string>
+
 
 // forward declare Environment
 class Environment;
@@ -112,6 +112,7 @@ private:
   Expression handle_define(Environment & env);
   Expression handle_begin(Environment & env);
   Expression handle_lambda();
+  Expression handle_apply(Environment & env);
   Expression call_lambda(Expression & lambda, const List & args, const Environment & env);
 };
 
