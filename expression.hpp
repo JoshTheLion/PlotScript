@@ -111,8 +111,11 @@ private:
   Expression handle_lookup(const Atom & head, const Environment & env);
   Expression handle_define(Environment & env);
   Expression handle_begin(Environment & env);
+  
   Expression handle_lambda();
   Expression handle_apply(Environment & env);
+  Expression handle_map(Environment & env);
+
   Expression call_lambda(Expression & lambda, const List & args, const Environment & env);
 };
 

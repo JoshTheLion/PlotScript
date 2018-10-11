@@ -209,7 +209,7 @@ Expression Expression::handle_define(Environment & env){
     throw SemanticError("Error during evaluation: attempt to redefine a special-form");
   }
   
-  if((env.is_proc(m_head)) || (s == "apply")){
+  if((env.is_proc(m_head)) || (s == "apply") || (s == "map")){
     throw SemanticError("Error during evaluation: attempt to redefine a built-in procedure");
   }
 	
@@ -271,7 +271,7 @@ Expression Expression::handle_lambda() {
 
 /*
  * (apply <procedure> <list>)
- * The apply built-in binary procedure has two arguments. The first argument
+ * The built-in binary procedure apply has two arguments. The first argument
  * is a procedure, the second a list. It treats the elements of the list
  * as the arguments to the procedure, returning the result after evaluation.
  */
@@ -279,12 +279,12 @@ Expression Expression::handle_apply(Environment & env){
   
   // tail must have 2 arguments or error
   if(m_tail.size() != 2){
-    throw SemanticError("Error during evaluation: invalid number of arguments to apply");
+    throw SemanticError("Error during evaluation: invalid number of arguments in call to apply");
   }
   
   // tail[0] must be a symbol
   if( !(m_tail[0].isHeadSymbol() && m_tail[0].isTailEmpty()) ){
-    throw SemanticError("Error during evaluation: first argument to apply is not a Symbol");
+    throw SemanticError("Error during evaluation: first argument in call to apply is not a Symbol");
   }
   
   // Extract first piece of apply function
@@ -292,12 +292,12 @@ Expression Expression::handle_apply(Environment & env){
   
   // tail[0] must be a built-in or user-defined procedure
   if( !(env.is_proc(proc) || env.is_anon_proc(proc)) ){
-    throw SemanticError("Error during evaluation: first argument to apply is not a Procedure");
+    throw SemanticError("Error during evaluation: first argument in call to apply is not a Procedure");
   }
 
   // tail[1] must be a List of arguments
   if(!m_tail[1].isHeadList()){
-    throw SemanticError("Error during evaluation: second argument to apply is not a List");
+    throw SemanticError("Error during evaluation: second argument in call to apply is not a List");
   }
   
   // Extract second piece of apply function
@@ -308,6 +308,57 @@ Expression Expression::handle_apply(Environment & env){
   result.m_tail = args;
   
   // Evaluate result of applied procedure
+  return result.eval(env);
+}
+
+/*
+ * (map <procedure> <list>)
+ * The built-in binary procedure map is similar to apply, but treats each
+ * entry of the list as a separate argument to the procedure, returning a
+ * list of the same size of results.
+ */
+Expression Expression::handle_map(Environment & env){
+  
+  // tail must have 2 arguments or error
+  if(m_tail.size() != 2){
+    throw SemanticError("Error during evaluation: invalid number of arguments in call to map");
+  }
+  
+  // tail[0] must be a symbol
+  if( !(m_tail[0].isHeadSymbol() && m_tail[0].isTailEmpty()) ){
+    throw SemanticError("Error during evaluation: first argument in call to map is not a Symbol");
+  }
+  
+  // Extract first piece of map function
+  Atom proc = m_tail[0].head();
+  
+  // tail[0] must be a built-in or user-defined procedure
+  if( !(env.is_proc(proc) || env.is_anon_proc(proc)) ){
+    throw SemanticError("Error during evaluation: first argument to map is not a Procedure");
+  }
+
+  // tail[1] must be a List of arguments
+  if(!m_tail[1].isHeadList()){
+    throw SemanticError("Error during evaluation: second argument to map is not a List");
+  }
+  
+  // Extract second piece of map function
+  List args = m_tail[1].asList();
+
+  // Set up restructured AST in form: (list <expression> <expression> ...)
+  Expression result(Atom("list"));
+
+  // Apply the procedure to each argument
+  for(auto & exp : args){
+    // Create a new Expression in form: (<procedure> <argument>)
+    Expression argApply(proc);
+    argApply.m_tail = {exp};
+    
+    // Add it to the AST
+    result.m_tail.push_back(argApply);
+  }
+  
+  // Evaluate modified AST and return result
   return result.eval(env);
 }
 
@@ -331,9 +382,13 @@ Expression Expression::eval(Environment & env){
   else if(m_head.isSymbol() && m_head.asSymbol() == "lambda"){
     return handle_lambda();
   }
-  // handle apply special-form
+  // handle apply special-form/procedure
   else if(m_head.isSymbol() && m_head.asSymbol() == "apply"){
     return handle_apply(env);
+  }
+  // handle map special-form/procedure
+  else if(m_head.isSymbol() && m_head.asSymbol() == "map"){
+    return handle_map(env);
   }
   // else attempt to treat as procedure
   else{ 
