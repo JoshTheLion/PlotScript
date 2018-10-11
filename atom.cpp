@@ -1,4 +1,5 @@
 #include "atom.hpp"
+
 #include <sstream>
 #include <cctype>
 #include <cmath>
@@ -39,14 +40,10 @@ Atom::Atom(const Token & token): Atom(){
 	// is token symbol, complex, or list?
 	std::string tempS = token.asString();
 	std::complex<double> IMAG = std::complex<double>(0.0, 1.0);
-	//std::vector<Expression> emptyList;
 
 	if((tempS.length() == 1) && (tempS[0] == 'I')){
 	  setComplex(IMAG);
 	}
-	//if((tempS.length() == 4) && (tempS == "list")){
-	  //setList(emptyList);
-	//}
 	else{
       setSymbol(tempS);
 	}
@@ -229,14 +226,7 @@ std::ostream & operator<<(std::ostream & out, const Atom & a){
   if(a.isSymbol()){
     out << a.asSymbol();
   }
-  if (a.isComplex()) {
-	/* 
-	** complex.operator<< adds extra parenthesis with auto-formatting:
-	**
-	**		out << a.asComplex(); // Would have printed I = ((0,1)) instead of (0,1)
-	**
-	** Have to manually output the real and imaginary parts to fix format
-	*/
+  if (a.isComplex()){
 	out << a.asComplex().real() << "," << a.asComplex().imag();
   }
   return out;

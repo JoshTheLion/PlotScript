@@ -5,10 +5,8 @@ Defines the Atom type and associated functions.
 #define ATOM_HPP
 
 #include "token.hpp"
-#include <complex.h>
+
 #include <complex>
-#include <list>
-#include <vector>
  
 
 /*! \class Atom
