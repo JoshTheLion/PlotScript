@@ -2,10 +2,10 @@
 
 #include "atom.hpp"
 
-TEST_CASE( "Test constructors", "[atom]" ) {
+TEST_CASE( "Test Atom constructors", "[atom]" ) {
 
+  SECTION("Default Constructor")
   {
-    INFO("Default Constructor");
     Atom a;
 
     REQUIRE(a.isNone());
@@ -13,9 +13,9 @@ TEST_CASE( "Test constructors", "[atom]" ) {
     REQUIRE(!a.isSymbol());
 	REQUIRE(!a.isComplex());
   }
-
+  
+  SECTION("Number Constructor")
   {
-    INFO("Number Constructor");
     Atom a(1.0);
 
     REQUIRE(!a.isNone());
@@ -23,9 +23,9 @@ TEST_CASE( "Test constructors", "[atom]" ) {
     REQUIRE(!a.isSymbol());
 	REQUIRE(!a.isComplex());
   }
-
+  
+  SECTION("Symbol Constructor")
   {
-    INFO("Symbol Constructor");
     Atom a("hi");
 
     REQUIRE(!a.isNone());
@@ -33,9 +33,9 @@ TEST_CASE( "Test constructors", "[atom]" ) {
     REQUIRE(a.isSymbol());
 	REQUIRE(!a.isComplex());
   }
-
+  
+  SECTION("Complex Constructor")
   {
-    INFO("Complex Constructor");
     Atom a(std::complex<double>(0.0, 1.0));
 
     REQUIRE(!a.isNone());
@@ -43,53 +43,53 @@ TEST_CASE( "Test constructors", "[atom]" ) {
     REQUIRE(!a.isSymbol());
 	REQUIRE(a.isComplex());
   }
-
+  
+  SECTION("Token Constructor")
   {
-    INFO("Token Constructor");
     Token t1("hi");
     Atom a1(t1);
-
+    
     REQUIRE(!a1.isNone());
     REQUIRE(!a1.isNumber());
     REQUIRE(a1.isSymbol());
-	REQUIRE(!a1.isComplex());
-
-	Token t2("I");
-	Atom a2(t2);
-
-	REQUIRE(!a2.isNone());
-	REQUIRE(!a2.isNumber());
-	REQUIRE(!a2.isSymbol());
-	REQUIRE(a2.isComplex());
+    REQUIRE(!a1.isComplex());
+    
+    Token t2("I");
+    Atom a2(t2);
+    
+    REQUIRE(!a2.isNone());
+    REQUIRE(!a2.isNumber());
+    REQUIRE(!a2.isSymbol());
+    REQUIRE(a2.isComplex());
   }
-
+  
+  SECTION("Copy Constructor")
   {
-    INFO("Copy Constructor");
     Atom a1(1.0);
     Atom b1("hi");
-	Atom c1(std::complex<double>(0.0, 1.0));
-
+    Atom c1(std::complex<double>(0.0, 1.0));
+    
     Atom a2 = a1;
-	REQUIRE(!a2.isNone());
-	REQUIRE(a2.isNumber());
-	REQUIRE(!a2.isSymbol());
-	REQUIRE(!a2.isComplex());
-
+    REQUIRE(!a2.isNone());
+    REQUIRE(a2.isNumber());
+    REQUIRE(!a2.isSymbol());
+    REQUIRE(!a2.isComplex());
+    
     Atom b2 = b1;
-	REQUIRE(!b2.isNone());
-	REQUIRE(!b2.isNumber());
-	REQUIRE(b2.isSymbol());
-	REQUIRE(!b2.isComplex());
-
-	Atom c2 = c1;
-	REQUIRE(!c2.isNone());
-	REQUIRE(!c2.isNumber());
-	REQUIRE(!c2.isSymbol());
-	REQUIRE(c2.isComplex());
+    REQUIRE(!b2.isNone());
+    REQUIRE(!b2.isNumber());
+    REQUIRE(b2.isSymbol());
+    REQUIRE(!b2.isComplex());
+    
+    Atom c2 = c1;
+    REQUIRE(!c2.isNone());
+    REQUIRE(!c2.isNumber());
+    REQUIRE(!c2.isSymbol());
+    REQUIRE(c2.isComplex());
   }
 }
 
-TEST_CASE( "Test assignment", "[atom]" ) {
+TEST_CASE( "Test Atom assignment", "[atom]" ) {
 
   SECTION("Assign default") {
     {
@@ -254,7 +254,7 @@ TEST_CASE( "Test assignment", "[atom]" ) {
   }
 }
 
-TEST_CASE( "Test comparison", "[atom]" ) {
+TEST_CASE( "Test Atom comparison", "[atom]" ) {
 
   SECTION("Compare default") {
     {
