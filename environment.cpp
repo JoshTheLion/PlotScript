@@ -782,3 +782,15 @@ void Environment::reset(){
   // Procedure: range;
   envmap.emplace("range", EnvResult(ProcedureType, make_range));
 }
+
+bool Environment::operator==(const Environment & env) const noexcept{
+
+  // Comparison should work using just the std::map::operator==
+  return (envmap == env.envmap);
+}
+
+bool operator!=(const Environment & left, const Environment & right) noexcept{
+
+  return !(left == right);
+}
+

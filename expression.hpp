@@ -9,7 +9,7 @@ Defines the Expression type and assiciated functions.
 
 #include <vector>
 #include <string>
-
+#include <utility>
 
 // forward declare Environment
 class Environment;
@@ -23,8 +23,9 @@ list of expressions called the tail.
 class Expression {
 public:
 
-  // convenience typedef
+  // convenience typedefs
   typedef std::vector<Expression> List;
+  typedef std::pair<List, Expression> Lambda;
   typedef std::vector<Expression>::const_iterator ConstIteratorType;
 
   /// Default construct and Expression, whose type in NoneType
@@ -85,6 +86,9 @@ public:
 
   /// value of Expression as a List vector, return empty List vector if not a List
   List asList() const noexcept;
+
+  /// value of Expression as a Lambda pair (params, proc), return empty pair if not a Lambda
+  Lambda asLambda() const noexcept;
 
   /// Evaluate expression using a post-order traversal (recursive)
   Expression eval(Environment & env);

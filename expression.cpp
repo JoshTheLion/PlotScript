@@ -6,7 +6,6 @@
 #include <list>
 #include <vector>
 
-
 Expression::Expression(){}
 
 Expression::Expression(const Atom & a){
@@ -36,8 +35,7 @@ Expression::Expression(const List & parameters, const Expression & function){
   m_head = Atom("lambda");
 
   // Combine both arguments into new Lambda Type Expression
-  m_tail.push_back(Expression(parameters)); 
-  m_tail.push_back(function);
+  m_tail = { Expression(parameters), function };
 }
 
 Expression & Expression::operator=(const Expression & a){
@@ -91,9 +89,16 @@ Expression::List Expression::asList() const noexcept{
   
   List result;
   
-  if(isHeadList()){
-	  result = m_tail;
-  }
+  if (isHeadList()) { result = m_tail; }
+
+  return result;
+}
+
+Expression::Lambda Expression::asLambda() const noexcept{
+  
+  Lambda result;
+  
+  if (isHeadLambda()) { result = std::make_pair(m_tail[0].m_tail, m_tail[1]); }
 
   return result;
 }
@@ -451,7 +456,7 @@ std::ostream & operator<<(std::ostream & out, const Expression & exp){
 	}
   }
   
-  // Print each List entry preceded by a space, except for the first entry
+  // Print each tail Expression preceded by a space, except for the first entry
   for(auto e = exp.tailConstBegin(); e != exp.tailConstEnd(); ++e){
 	if(e != exp.tailConstBegin()){
 	  out << " ";
@@ -470,11 +475,12 @@ bool Expression::operator==(const Expression & exp) const noexcept{
 
   result = result && (m_tail.size() == exp.m_tail.size());
 
-  if(result){
-    for(auto lefte = m_tail.begin(), righte = exp.m_tail.begin();
-	(lefte != m_tail.end()) && (righte != exp.m_tail.end());
-	++lefte, ++righte){
-      result = result && (*lefte == *righte);
+  if(result){ // Recursively compare each of the tail expressions
+    for(auto leftExp = m_tail.begin(), rightExp = exp.m_tail.begin();
+	    (leftExp != m_tail.end()) && (rightExp != exp.m_tail.end());
+	    ++leftExp, ++rightExp)
+    { // Might have to beef this up for new Exp Types
+      result = result && (*leftExp == *rightExp);
     }
   }
 

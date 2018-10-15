@@ -98,6 +98,9 @@ public:
 
   /*! Reset the environment to its default state. */
   void reset();
+  
+  // equality comparison for two environments (recursive)
+  bool operator==(const Environment & env) const noexcept;
 
 private:
   
@@ -113,6 +116,14 @@ private:
     EnvResult(){};
     EnvResult(EnvResultType t, Expression e) : type(t), exp(e){};
     EnvResult(EnvResultType t, Procedure p) : type(t), proc(p){};
+    
+    // equality comparison for two EnvResult objects (idk if necessary)
+    bool operator==(const EnvResult & right) const noexcept{
+      if(type != right.type) return false;
+      if(type == ExpressionType){return exp == right.exp;}
+      if(type == ProcedureType){return proc == right.proc;}
+      return false; // This line should never be reached
+    };
   };
 
   // the environment map
@@ -121,5 +132,8 @@ private:
   // Flag to allow overwriting variables in a Lambda shadow Environment
   bool isLambda;
 };
+
+/// inequality comparison for two environments (recursive)
+bool operator!=(const Environment & left, const Environment & right) noexcept;
 
 #endif
