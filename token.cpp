@@ -8,6 +8,7 @@
 const char OPENCHAR = '(';
 const char CLOSECHAR = ')';
 const char COMMENTCHAR = ';';
+const char STRINGCHAR = '\"';
 
 Token::Token(TokenType t): m_type(t){}
 
@@ -49,9 +50,33 @@ TokenSequenceType tokenize(std::istream & seq){
     if(c == COMMENTCHAR){
       // chomp until the end of the line
       while((!seq.eof()) && (c != '\n')){
-	c = seq.get();
+	    c = seq.get();
       }
       if(seq.eof()) break;
+    }
+    else if(c == STRINGCHAR){
+      // End and store previous token
+      store_ifnot_empty(token, tokens);
+      
+      // Start new String literal Token
+      token.push_back(c);
+      
+      // Begin reading in other String characters (If any)
+      c = seq.get();
+      while((!seq.eof()) && (c != '\"')){
+        token.push_back(c);
+        c = seq.get();
+      }
+      // Check that Token had both " characters before storing
+      if(c == STRINGCHAR){
+        token.push_back(c);
+        store_ifnot_empty(token, tokens);
+      }
+      else{ // Error: Invalid String declaration, unable to parse
+        token.clear();
+        tokens.clear();
+        break;
+      }
     }
     else if(c == OPENCHAR){
       store_ifnot_empty(token, tokens);
@@ -61,7 +86,7 @@ TokenSequenceType tokenize(std::istream & seq){
       store_ifnot_empty(token, tokens);
       tokens.push_back(Token::TokenType::CLOSE);
     }
-    else if(isspace(c)){
+    else if(isspace(c)){ // Store Token and start next Token
       store_ifnot_empty(token, tokens);
     }
     else{

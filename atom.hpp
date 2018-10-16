@@ -7,7 +7,7 @@ Defines the Atom type and associated functions.
 #include "token.hpp"
 
 #include <complex>
- 
+#include <string>
 
 /*! \class Atom
 \brief A variant type that may be a Number or Symbol or Complex or the default type None.
@@ -23,7 +23,7 @@ public:
   /// Construct an Atom of type Number with value
   Atom(double value);
 
-  /// Construct an Atom of type Symbol named value
+  /// Construct an Atom of type Symbol or String with value
   Atom(const std::string & value);
 
   /// Construct an Atom of type Complex with value
@@ -53,14 +53,20 @@ public:
   /// predicate to determine if an Atom is of type Complex
   bool isComplex() const noexcept;
 
-  /// value of Atom as a number, return 0 if not a Number
+  /// predicate to determine if an Atom is of type String
+  bool isString() const noexcept;
+
+  /// value of Atom as a Number literal, return 0 if not a Number
   double asNumber() const noexcept;
 
-  /// value of Atom as a number, returns empty-string if not a Symbol
+  /// value of Atom as a Symbol, returns empty-string if not a Symbol
   std::string asSymbol() const noexcept;
 
-  /// value of Atom as a complex number, return 0 if not a Complex or Number
+  /// value of Atom as a Complex number, return 0 if not a Complex
   std::complex<double> asComplex() const noexcept;
+
+  /// value of Atom as a String literal, returns empty-string if not a String
+  std::string asString() const noexcept;
 
   /// equality comparison based on type and value
   bool operator==(const Atom & right) const noexcept;
@@ -68,7 +74,7 @@ public:
 private:
 
   // internal enum of known types
-  enum Type {NoneKind, NumberKind, SymbolKind, ComplexKind};
+  enum Type {NoneKind, NumberKind, SymbolKind, ComplexKind, StringKind};
 
   // track the type
   Type m_type;
@@ -77,8 +83,9 @@ private:
   // when setting non POD values (see setSymbol)
   union { // A union is a special class type that can hold only one of its non-static data members at a time.
     double numberValue;
-    std::string stringValue;
+    std::string symbolValue;
 	std::complex<double> complexValue;
+    std::string stringValue;
   };
 
   // helper to set type and value of Number
@@ -89,6 +96,9 @@ private:
   
   // helper to set type and value of Complex
   void setComplex(std::complex<double> value);
+
+  // helper to set type and value of String
+  void setString(const std::string & value);
 };
 
 /// inequality comparison for Atom

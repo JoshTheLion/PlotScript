@@ -77,6 +77,10 @@ bool Expression::isHeadComplex() const noexcept{
   return m_head.isComplex();
 }
 
+bool Expression::isHeadString() const noexcept{
+  return m_head.isString();
+}
+
 bool Expression::isHeadList() const noexcept{
   return ((m_head.isSymbol()) && (m_head.asSymbol() == "list"));
 }
@@ -164,7 +168,8 @@ Expression Expression::handle_lookup(const Atom & head, const Environment & env)
 	    throw SemanticError("Error during evaluation: unknown symbol");
       }
     }
-    else if(head.isNumber() || head.isComplex()){ // if literal is in env return value
+    // if literal is in env return value
+    else if(head.isNumber() || head.isComplex() || head.isString()){
       return Expression(head);
     }
     else{

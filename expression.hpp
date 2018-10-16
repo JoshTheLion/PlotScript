@@ -23,9 +23,12 @@ list of expressions called the tail.
 class Expression {
 public:
 
-  // convenience typedefs
+  // Labels for the formatted data containers stored in formatted Expressions
+  typedef std::string String;
   typedef std::vector<Expression> List;
   typedef std::pair<List, Expression> Lambda;
+  
+  // convenience typedef
   typedef std::vector<Expression>::const_iterator ConstIteratorType;
 
   /// Default construct and Expression, whose type in NoneType
@@ -77,6 +80,9 @@ public:
 
   /// convienience member to determine if head atom is a symbol
   bool isHeadComplex() const noexcept;
+
+  /// convienience member to determine if head atom is a string literal
+  bool isHeadString() const noexcept;
 
   /// convienience member to determine if head atom is a list
   bool isHeadList() const noexcept;
