@@ -10,6 +10,7 @@ Defines the Expression type and assiciated functions.
 #include <vector>
 #include <string>
 #include <utility>
+#include <map>
 
 // forward declare Environment
 class Environment;
@@ -114,6 +115,9 @@ private:
   // and cache coherence, at the cost of wasted memory.
   std::vector<Expression> m_tail;
 
+  // Property list
+  std::map<String, Expression> m_props;
+
   // convenience typedef
   typedef std::vector<Expression>::iterator IteratorType;
   
@@ -121,12 +125,13 @@ private:
   Expression handle_lookup(const Atom & head, const Environment & env);
   Expression handle_define(Environment & env);
   Expression handle_begin(Environment & env);
-  
   Expression handle_lambda();
+  
+  // Built-In Functions
+  Expression call_lambda(Expression & lambda, const List & args, const Environment & env);
   Expression handle_apply(Environment & env);
   Expression handle_map(Environment & env);
-
-  Expression call_lambda(Expression & lambda, const List & args, const Environment & env);
+  Expression set_property(Environment & env);
 };
 
 /// Render expression to output stream

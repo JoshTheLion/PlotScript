@@ -17,6 +17,7 @@ Expression::Expression(const Atom & a){
 Expression::Expression(const Expression & a){
 
   m_head = a.m_head;
+  m_props = a.m_props;
   for(auto e : a.m_tail){
     m_tail.push_back(e);
   }
@@ -43,10 +44,11 @@ Expression & Expression::operator=(const Expression & a){
   // prevent self-assignment
   if(this != &a){
     m_head = a.m_head;
+    m_props = a.m_props;
     m_tail.clear();
     for(auto e : a.m_tail){
       m_tail.push_back(e);
-    } 
+    }
   }
   
   return *this;
@@ -160,21 +162,23 @@ Expression Expression::apply(const Atom & op, const List & args, const Environme
 }
 
 Expression Expression::handle_lookup(const Atom & head, const Environment & env){
-    if(head.isSymbol()){ // if symbol is in env return value
-      if(env.is_exp(head)){
-	    return env.get_exp(head);
-      }
-      else{
-	    throw SemanticError("Error during evaluation: unknown symbol");
-      }
+  
+  // if symbol is in env return value
+  if (head.isSymbol()) { 
+    if (env.is_exp(head)) {
+      return env.get_exp(head);
     }
-    // if literal is in env return value
-    else if(head.isNumber() || head.isComplex() || head.isString()){
-      return Expression(head);
+    else {
+      throw SemanticError("Error during evaluation: unknown symbol");
     }
-    else{
-      throw SemanticError("Error during evaluation: Invalid type in terminal expression");
-    }
+  }
+  // if literal is in env return value
+  else if (head.isNumber() || head.isComplex() || head.isString()) {
+    return Expression(head);
+  }
+  else {
+    throw SemanticError("Error during evaluation: Invalid type in terminal expression");
+  }
 }
 
 /* (begin <expression> <expression> ...) evaluates each expression in order,
@@ -219,7 +223,8 @@ Expression Expression::handle_define(Environment & env){
     throw SemanticError("Error during evaluation: attempt to redefine a special-form");
   }
   
-  if((env.is_proc(m_head)) || (s == "apply") || (s == "map")){
+  if((env.is_proc(m_head)) || (s == "apply") || (s == "map")
+      || (s == "set-property") || (s == "get-property")){
     throw SemanticError("Error during evaluation: attempt to redefine a built-in procedure");
   }
 	
@@ -249,6 +254,7 @@ Expression Expression::handle_define(Environment & env){
  * ones.
 */
 Expression Expression::handle_lambda() {
+  
   // tail must have 2 arguments or error
   if(m_tail.size() != 2){
     throw SemanticError("Error during evaluation: invalid number of arguments to lambda");
@@ -372,6 +378,53 @@ Expression Expression::handle_map(Environment & env){
   return result.eval(env);
 }
 
+/*
+(set-property <String> <Expression> <Expression>)
+set-property is a tertiary procedure taking a String expression as it's first
+argument (the key), an arbitrary expression as it's second argument (the value),
+and an Expression as the third argument. The procedure should add or reset an
+entry to the third argument's property list, after evaluating it, with a key
+equal to the first argument and value that results from evaluating the second
+argument. The resulting expression, with the modified property list, is returned.
+The property-list has no effect on how the expression is printed.
+
+Note the value argument to set-property is evaluated before adding it to the
+property list, but there are no side effects to the global environment
+(similar to lambdas).
+*/
+Expression Expression::set_property(Environment & env)
+{
+  // tail must have 3 arguments or error
+  if(m_tail.size() != 3){
+    throw SemanticError("Error: invalid number of arguments in call to set-property");
+  }
+  
+  // tail[0] must be a String literal
+  if(!m_tail[0].isHeadString()){
+    throw SemanticError("Error: first argument in call to set-property not a String");
+  }
+  Expression::String key = m_tail[0].head().asString();
+  
+  // Copy construct a new temporary Environment for evaluation
+  Environment tempEnv(env);
+  
+  // Evaluate value Expression and copy
+  Expression value = m_tail[1].eval(tempEnv);
+
+  // Evaluate main Expression and copy
+  Expression result = m_tail[2].eval(env);
+
+  // Add (key, value) to property list
+  if(result.m_props.find(key) != result.m_props.end()){
+    std::swap(result.m_props.at(key), value);
+  }
+  else{
+    result.m_props.emplace(key, value);
+  }
+  
+  return result;
+};
+
 // this is a simple recursive version. the iterative version is more
 // difficult with the ast data structure used (no parent pointer).
 // this limits the practical depth of our AST
@@ -399,6 +452,10 @@ Expression Expression::eval(Environment & env){
   // handle map special-form/procedure
   else if(m_head.isSymbol() && m_head.asSymbol() == "map"){
     return handle_map(env);
+  }
+  // handle set-property special-form/procedure
+  else if(m_head.isSymbol() && m_head.asSymbol() == "set-property"){
+    return set_property(env);
   }
   // else attempt to treat as procedure
   else{ 
