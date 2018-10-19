@@ -271,6 +271,9 @@ bool operator!=(const Atom & left, const Atom & right) noexcept{
 
 std::ostream & operator<<(std::ostream & out, const Atom & a){
 
+  if(a.isNone()){
+    out << "NONE";
+  }
   if(a.isNumber()){
     out << a.asNumber();
   }
