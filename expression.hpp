@@ -132,6 +132,7 @@ private:
   Expression handle_apply(Environment & env);
   Expression handle_map(Environment & env);
   Expression set_property(Environment & env);
+  Expression get_property(Environment & env);
 };
 
 /// Render expression to output stream

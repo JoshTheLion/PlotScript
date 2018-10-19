@@ -224,7 +224,8 @@ Expression Expression::handle_define(Environment & env){
   }
   
   if((env.is_proc(m_head)) || (s == "apply") || (s == "map")
-      || (s == "set-property") || (s == "get-property")){
+      || (s == "set-property") || (s == "get-property"))
+  {
     throw SemanticError("Error during evaluation: attempt to redefine a built-in procedure");
   }
 	
@@ -236,7 +237,7 @@ Expression Expression::handle_define(Environment & env){
     throw SemanticError("Error during evaluation: attempt to redefine a previously defined symbol");
   }
 
-  //and add to env
+  // and add to env
   env.add_exp(m_tail[0].head(), result);
   
   return result;
@@ -305,9 +306,12 @@ Expression Expression::handle_apply(Environment & env){
   
   // Extract first piece of apply function
   Atom proc = m_tail[0].head();
-  
+  std::string s = proc.asSymbol();
+
   // tail[0] must be a built-in or user-defined procedure
-  if( !(env.is_proc(proc) || env.is_anon_proc(proc)) ){
+  if( !(env.is_proc(proc) || env.is_anon_proc(proc) || (s == "apply") || (s == "map")
+      || (s == "set-property") || (s == "get-property")) )
+  {
     throw SemanticError("Error during evaluation: first argument in call to apply is not a Procedure");
   }
 
@@ -347,9 +351,12 @@ Expression Expression::handle_map(Environment & env){
   
   // Extract first piece of map function
   Atom proc = m_tail[0].head();
-  
+  std::string s = proc.asSymbol();
+
   // tail[0] must be a built-in or user-defined procedure
-  if( !(env.is_proc(proc) || env.is_anon_proc(proc)) ){
+  if( !(env.is_proc(proc) || env.is_anon_proc(proc) || (s == "apply") || (s == "map")
+      || (s == "set-property") || (s == "get-property")) )
+  {
     throw SemanticError("Error during evaluation: first argument to map is not a Procedure");
   }
 
@@ -379,19 +386,19 @@ Expression Expression::handle_map(Environment & env){
 }
 
 /*
-(set-property <String> <Expression> <Expression>)
-set-property is a tertiary procedure taking a String expression as it's first
-argument (the key), an arbitrary expression as it's second argument (the value),
-and an Expression as the third argument. The procedure should add or reset an
-entry to the third argument's property list, after evaluating it, with a key
-equal to the first argument and value that results from evaluating the second
-argument. The resulting expression, with the modified property list, is returned.
-The property-list has no effect on how the expression is printed.
-
-Note the value argument to set-property is evaluated before adding it to the
-property list, but there are no side effects to the global environment
-(similar to lambdas).
-*/
+ * (set-property <String> <Expression> <Expression>)
+ * set-property is a tertiary procedure taking a String expression as it's first
+ * argument (the key), an arbitrary expression as it's second argument (the value),
+ * and an Expression as the third argument. The procedure should add or reset an
+ * entry to the third argument's property list, after evaluating it, with a key
+ * equal to the first argument and value that results from evaluating the second
+ * argument. The resulting expression, with the modified property list, is returned.
+ * The property-list has no effect on how the expression is printed.
+ * 
+ * Note the value argument to set-property is evaluated before adding it to the
+ * property list, but there are no side effects to the global environment
+ * (similar to lambdas).
+ */
 Expression Expression::set_property(Environment & env)
 {
   // tail must have 3 arguments or error
@@ -403,7 +410,7 @@ Expression Expression::set_property(Environment & env)
   if(!m_tail[0].isHeadString()){
     throw SemanticError("Error: first argument in call to set-property not a String");
   }
-  Expression::String key = m_tail[0].head().asString();
+  String key = m_tail[0].head().asString();
   
   // Copy construct a new temporary Environment for evaluation
   Environment tempEnv(env);
@@ -425,12 +432,45 @@ Expression Expression::set_property(Environment & env)
   return result;
 };
 
+/*
+ * (get-property <String> <Expression>)
+ * get-property is a binary procedure taking a String expression as its
+ * first argument (the key) and an arbitrary expression as the second
+ * argument. The procedure returns the expression associated with the first
+ * argument of the expression in the second argument, or returns an Expression
+ * of type None if they key does not exist in the property list.
+ */
+Expression Expression::get_property(Environment & env)
+{
+  // tail must have 2 arguments or error
+  if(m_tail.size() != 2){
+    throw SemanticError("Error: invalid number of arguments in call to get-property");
+  }
+  
+  // tail[0] must be a String literal
+  if(!m_tail[0].isHeadString()){
+    throw SemanticError("Error: first argument in call to get-property not a String");
+  }
+  String key = m_tail[0].head().asString();
+  
+  // tail[1] must be a valid Expression 
+  Expression exp = m_tail[1].eval(env);
+
+  // Search property list of tail[1] for key
+  auto result = exp.m_props.find(key);
+  if(result != exp.m_props.end()){
+    return result->second;
+  }
+
+  return Expression();
+}
+
 // this is a simple recursive version. the iterative version is more
 // difficult with the ast data structure used (no parent pointer).
 // this limits the practical depth of our AST
 Expression Expression::eval(Environment & env){
   
-  if( (m_tail.empty()) && (!isHeadList()) ){ //Base Case
+  if( (m_tail.empty()) && (!isHeadList()) ){ // Base Case
     return handle_lookup(m_head, env);
   }
   // handle begin special-form
@@ -457,13 +497,18 @@ Expression Expression::eval(Environment & env){
   else if(m_head.isSymbol() && m_head.asSymbol() == "set-property"){
     return set_property(env);
   }
+  // handle get-property special-form/procedure
+  else if(m_head.isSymbol() && m_head.asSymbol() == "get-property"){
+    return get_property(env);
+  }
   // else attempt to treat as procedure
   else{ 
     // First: Evaluate/simplify all subtrees
 	std::vector<Expression> results;
     for(Expression::IteratorType it = m_tail.begin(); it != m_tail.end(); ++it){
       results.push_back(it->eval(env));
-    }// Last: Apply sub-tree result to function pointer
+    }
+    // Last: Apply sub-tree result to function pointer
     return apply(m_head, results, env);
   }
 }
@@ -508,6 +553,11 @@ Expression Expression::call_lambda(Expression & lambda, const List & args, const
 }
 
 std::ostream & operator<<(std::ostream & out, const Expression & exp){
+
+  if(exp.head().isNone()){
+    out << exp.head();
+    return out;
+  }
 
   out << "(";
   
