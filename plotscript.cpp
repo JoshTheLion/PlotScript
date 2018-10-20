@@ -5,6 +5,8 @@
 
 #include "interpreter.hpp"
 #include "semantic_error.hpp"
+#include "startup_config.hpp"
+
 
 void prompt(){
   std::cout << "\nplotscript> ";
@@ -25,10 +27,46 @@ void info(const std::string & err_str){
   std::cout << "Info: " << err_str << std::endl;
 }
 
+int startup(Interpreter & interp){
+  
+  std::ifstream ifs(STARTUP_FILE);
+  
+  if(!ifs){
+    error("Could not open file for reading.");
+    return EXIT_FAILURE;
+  }
+  
+  if(!interp.parseStream(ifs)){
+    ifs.close();
+    error("Invalid Program. Could not parse.");
+    return EXIT_FAILURE;
+  }
+  else{
+    try{
+      Expression exp = interp.evaluate();
+      //std::cout << exp << std::endl;
+    }
+    catch(const SemanticError & ex){
+      ifs.close();
+      std::cerr << ex.what() << std::endl;
+      return EXIT_FAILURE;
+    }	
+  }
+  
+  ifs.close();
+  return EXIT_SUCCESS;
+}
+
 int eval_from_stream(std::istream & stream){
 
   Interpreter interp;
   
+  /*** Evaluate startup.pls ***/
+  if(startup(interp) != 0){
+    error("Invalid Startup Program.");
+    return EXIT_FAILURE;
+  }
+
   if(!interp.parseStream(stream)){
     error("Invalid Program. Could not parse.");
     return EXIT_FAILURE;
@@ -69,7 +107,12 @@ int eval_from_command(std::string argexp){
 // A REPL is a repeated read-eval-print loop
 void repl(){
   Interpreter interp;
-    
+  
+  /*** Evaluate startup.pls ***/
+  if(startup(interp) != 0){
+    error("Invalid Startup Program.");
+  }
+
   while(!std::cin.eof()){
     
     prompt();
@@ -84,11 +127,11 @@ void repl(){
     }
     else{
       try{
-	Expression exp = interp.evaluate();
-	std::cout << exp << std::endl;
+	    Expression exp = interp.evaluate();
+	    std::cout << exp << std::endl;
       }
       catch(const SemanticError & ex){
-	std::cerr << ex.what() << std::endl;
+        std::cerr << ex.what() << std::endl;
       }
     }
   }
