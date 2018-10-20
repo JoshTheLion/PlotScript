@@ -614,7 +614,7 @@ Public Methods
 
 Environment::Environment(){
   // Default values
-  isLambda = false;
+  isLambda = true;
   reset();
 }
 
