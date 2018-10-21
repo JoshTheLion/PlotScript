@@ -10,4 +10,11 @@
 									  (define line{p1,p2} (set-property "object-name" "line" line{p1,p2}))
 									  (define line{p1,p2} (set-property "thickness" 1 line{p1,p2}))
 									)))
+  
+  (define make-text (lambda (str)  (begin
+									  (define text{str}  (str))
+									  (define text{str}  (set-property "object-name" "text" text{str}))
+									  (define point{x,y} (make-point 0 0))
+									  (define text{str}  (set-property "position" point{x,y} text{str}))
+									)))
 )
