@@ -1,5 +1,7 @@
 (begin
-	(define point0 (lambda (x y) (list x y)))
-	(define point1 (set-property "object-name" "point" point0))
-	(define make-point (set-property "size" 0 point1))
+  (define make-point (lambda (x y) (begin
+									  (define point{x,y} (list x y))
+									  (define point{x,y} (set-property "object-name" "point" point{x,y}))
+									  (define point{x,y} (set-property "size" 0 point{x,y}))
+									)))
 )
