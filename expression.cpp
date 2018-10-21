@@ -224,11 +224,11 @@ Expression Expression::handle_define(Environment & env){
   }
   
   if((env.is_proc(m_head)) || (s == "apply") || (s == "map")
-      || (s == "set-property") || (s == "get-property"))
+      /*|| (s == "set-property") || (s == "get-property")*/)
   {
     throw SemanticError("Error during evaluation: attempt to redefine a built-in procedure");
   }
-	
+
   // eval tail[1]
   Expression result = m_tail[1].eval(env);
 
@@ -415,20 +415,20 @@ Expression Expression::set_property(Environment & env)
   // Copy construct a new temporary Environment for evaluation
   Environment tempEnv(env);
   
-  // Evaluate value Expression and copy
+  // Evaluate value Expression and copy result
   Expression value = m_tail[1].eval(tempEnv);
 
-  // Evaluate main Expression and copy
+  // Evaluate main Expression and copy result (including m_props)
   Expression result = m_tail[2].eval(env);
 
-  // Add (key, value) to property list
+  // Add/reset (key, value) to property list of copied Expression
   if(result.m_props.find(key) != result.m_props.end()){
     std::swap(result.m_props.at(key), value);
   }
   else{
     result.m_props.emplace(key, value);
   }
-  
+  // Return copied Expression with modified property list
   return result;
 };
 
@@ -453,10 +453,10 @@ Expression Expression::get_property(Environment & env)
   }
   String key = m_tail[0].head().asString();
   
-  // tail[1] must be a valid Expression 
+  // tail[1] can be any valid Expression
   Expression exp = m_tail[1].eval(env);
 
-  // Search property list of tail[1] for key
+  // Search property list of tail[1] copy for key
   auto result = exp.m_props.find(key);
   if(result != exp.m_props.end()){
     return result->second;
