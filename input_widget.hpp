@@ -2,7 +2,6 @@
 #define INPUT_WIDGET_H
 
 #include <QPlainTextEdit>
-#include <QLineEdit>
 #include <QWidget>
 #include <QDebug>
 #include <QKeyEvent>
@@ -12,31 +11,17 @@
 
 class InputWidget: public QPlainTextEdit
 {
-Q_OBJECT // Necessary macro in class definition
+Q_OBJECT
 
 public:
 	InputWidget(QWidget * parent = nullptr);
-	
-	//std::string getUserText();
-    //QString getUserText();
-	//Expression getEvalResult();
-
-//public slots:
-
-private slots:
-	//void textChanged(QString text);
 
 signals:
-  // When the shift+enter keys are pushed, the text is put into the stream
-    void textChanged(QString text);
+    void textUpdated(QString text);
 	
 private:
-	//QLineEdit * value;
-	//std::string inputExp;
+    // Override inherited to catch Shift+Enter
+    void keyPressEvent(QKeyEvent *event); 
     QString inputExp;
-    //QLineEdit * inputExp;
-	void keyPressEvent(QKeyEvent *event);
-//signals: // Neither public nor private
-	//Expression * result; // Send result to OutputWidget
 };
 #endif // INPUT_WIDGET_H

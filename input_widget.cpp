@@ -2,35 +2,34 @@
 
 #include <QWidget>
 #include <QDebug>
-#include <QLineEdit>
 
-// public:
+
 InputWidget::InputWidget(QWidget * parent): QPlainTextEdit(parent){
 	
-	//inputExp = new QLineEdit();
-    //inputExp = new QLineEdit();
-    //inputExp->setParent(parent);
-	//QObject::connect();
-	
-	// Evaluate
-}
-/*	
-QString InputWidget::getUserText(){
-	return inputExp;
+    setOverwriteMode(true);
+    setObjectName("input");
 }
 
-Expression InputWidget::getEvalResult(){
-	return result;
-}
+void InputWidget::keyPressEvent(QKeyEvent * keyEvent){
+  
+  qDebug() << keyEvent;
+  
+  auto k = keyEvent->key();
+  auto m = keyEvent->modifiers();
+  
+  // Check for Shift+Enter
+  if(m == Qt::ShiftModifier && (k == Qt::Key_Enter || k == Qt::Key_Return)){
+    
+    inputExp = QPlainTextEdit::toPlainText();
+    qDebug() << "Signal: " << inputExp << "\n";
 
-//private slots:
-void InputWidget::textChanged(std::string s){
-	qDebug() << s;
-	inputExp = s;
-}
-*/
-void InputWidget::keyPressEvent(QKeyEvent * event){
-	// Stub
+    // Send Expression to be evaluated
+    emit textUpdated(inputExp);
+  }
+  else{
+    // The inherited method handles all other events
+    QPlainTextEdit::keyPressEvent(keyEvent);
+  }
 }
 
 
