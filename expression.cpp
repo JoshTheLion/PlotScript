@@ -138,9 +138,12 @@ Expression::String Expression::asString(){
   
   // Cut off extra quotation marks for easier comparison
   if(isHeadString()){
+    
     String str = m_head.asString();
-    if(str.length > 1){
-      result = str.substr(1, str.length - 2);
+    size_t min = 1;
+    
+    if(str.size() > min){
+      result = str.substr(1, str.size() - 2);
     }
   }
   
