@@ -17,11 +17,11 @@ public:
 	InputWidget(QWidget * parent = nullptr);
 
 signals:
+    // Sends the entire plaintext contents of the document for eval
     void textUpdated(QString text);
 	
 private:
     // Override inherited to catch Shift+Enter
     void keyPressEvent(QKeyEvent *event); 
-    QString inputExp;
 };
 #endif // INPUT_WIDGET_H

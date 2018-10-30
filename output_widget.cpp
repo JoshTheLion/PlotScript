@@ -4,6 +4,13 @@
 #include <QDebug>
 #include <QLayout>
 
+#include <QGraphicsWidget>
+#include <QGraphicsView>
+#include <QGraphicsScene>
+
+#include <QGraphicsItem>
+#include <QGraphicsTextItem>
+
 
 OutputWidget::OutputWidget(QWidget * parent){
 	
@@ -24,11 +31,42 @@ OutputWidget::OutputWidget(QWidget * parent){
     this->setLayout(layout);
 }
 
-void OutputWidget::getResult(QString resultExp){
+void OutputWidget::getItem(QGraphicsItem * item){
   
-  qDebug() << "Result: " << resultExp << "\n";
+  // Remove old graphic item first
   frame->clear();
-  text = frame->addText(resultExp);
+  
+  // Store pointer to new item (or null)
+  m_item = item;
+  
+  // Display graphic
+  if(item != nullptr){
+    drawItem(item);
+  }
+  
+  // Place new graphic item and store reference to it
+  //drawItem(*m_item);
+  //drawItem(resultExp);
+}
+
+void OutputWidget::drawItem(QGraphicsItem * item){
+  
+  // Sort and handle different item types
+  if(item == nullptr){
+    // Display nothing
+    return;
+  }
+
+  // Get data label
+  QString label = item->data(ObjectType).toString();
+  if(label == "text"){
+    frame->addItem(item);
+    //qDebug() << QGraphicsScene::itemAt(0.0, 0.0);
+  }
+  else if(label == "TUI Type"){
+    frame->addItem(item);
+  }
+
 }
 
 

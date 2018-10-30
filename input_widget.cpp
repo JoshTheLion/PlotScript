@@ -20,7 +20,8 @@ void InputWidget::keyPressEvent(QKeyEvent * keyEvent){
   // Check for Shift+Enter
   if(m == Qt::ShiftModifier && (k == Qt::Key_Enter || k == Qt::Key_Return)){
     
-    inputExp = QPlainTextEdit::toPlainText();
+    // Extract Expression from document
+    QString inputExp = QPlainTextEdit::toPlainText();
     qDebug() << "Signal: " << inputExp << "\n";
 
     // Send Expression to be evaluated
