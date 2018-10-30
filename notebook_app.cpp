@@ -10,6 +10,7 @@
 #include <QLayout>
 #include <QDebug>
 #include <QGraphicsItem>
+#include <QGraphicsEllipseItem>
 
 NotebookApp::NotebookApp(QWidget * parent): QWidget(parent){
 	
@@ -131,7 +132,7 @@ void NotebookApp::setGraphicsType(Expression exp){
   
   // Assign graphic type
   if(exp.isHeadLambda()){
-    // Display nothing
+    // Display nothing for procedures
     item = nullptr;
   }
   if(exp.isHeadList()){
@@ -147,6 +148,7 @@ void NotebookApp::setGraphicsType(Expression exp){
 
     // If "position" is in prop list, must be type "point" or error
     if(exp.getProperty("position") != Expression()){
+      
       Expression expProp = exp.getProperty("position");
       std::string type = expProp.getProperty("object-name").asString();
 
@@ -157,9 +159,7 @@ void NotebookApp::setGraphicsType(Expression exp){
       }
       else{
         // Error message
-        QString error = QString::fromStdString("Error: Position not a point");
-        item = new QGraphicsTextItem(error);
-        emit graphicsResult(item);
+        emit graphicsResult(errFormat("Error: Position not a point"));
         return;
       }
     }
@@ -170,11 +170,40 @@ void NotebookApp::setGraphicsType(Expression exp){
     item->setData(ObjectType, "Text Type");
   }
   else if(expName == "point"){
+    
+    if(!exp.isHeadList()){
+      // Error message
+      emit graphicsResult(errFormat("Error: Position not a point"));
+      return;
+    }
+
     // Centered at the Point's coordinates with a diameter equal to the size property.
-    // If present in the property list, it is an error if this property is not a positive Number.
-    //item = new QGraphicsEllipseItem();
-    //scene->addItem(item);
-    item = nullptr;
+    Expression::List points = exp.asList();
+    double x = points[0].head().asNumber();;
+    double y = points[1].head().asNumber();
+    
+    // Default
+    double size = 0;
+    
+    // If "size" is present in the property list, it is an error if this property is not a positive Number.
+    if(exp.getProperty("size") != Expression()){
+      
+      Expression expProp = exp.getProperty("size");
+
+      if( expProp.head().isNumber() && (expProp.head().asNumber() > 0 ) ){
+        size = exp.getProperty("size").head().asNumber();
+      }
+      else{
+        // Error message
+        emit graphicsResult(errFormat("Error: Size is not a positive number"));
+        return;
+      }
+    }
+    item = new QGraphicsEllipseItem(x, y, size, size);
+    //item->setPos(x, y);
+    
+    // Tag object for ID
+    item->setData(ObjectType, "Point Type");
   }
   else if(expName == "line"){
     // starting at the position indicated by it's position property.

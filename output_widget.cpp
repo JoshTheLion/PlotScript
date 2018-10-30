@@ -63,6 +63,15 @@ void OutputWidget::drawItem(QGraphicsItem * item){
     frame->addItem(item);
     //qDebug() << QGraphicsScene::itemAt(0.0, 0.0);
   }
+  else if(label == "Point Type"){
+    frame->addItem(item);
+  }
+  else if (label == "Line Type") {
+    frame->addItem(item);
+  }
+  else if (label == "List Type") {
+    //frame->addItem(item);
+  }
   else if(label == "TUI Type"){
     frame->addItem(item);
   }
