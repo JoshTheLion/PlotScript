@@ -62,6 +62,28 @@ Atom & Expression::head(){
 const Atom & Expression::head() const{
   return m_head;
 }
+void Expression::append(const Atom & a){
+  m_tail.emplace_back(a);
+}
+
+Expression * Expression::tail(){
+  Expression * ptr = nullptr;
+  
+  if(m_tail.size() > 0){
+    ptr = &m_tail.back();
+  }
+
+  return ptr;
+}
+
+Expression::ConstIteratorType Expression::tailConstBegin() const noexcept{
+  return m_tail.cbegin();
+}
+
+Expression::ConstIteratorType Expression::tailConstEnd() const noexcept{
+  return m_tail.cend();
+}
+
 
 bool Expression::isTailEmpty() const noexcept{
   return m_tail.empty();
@@ -91,6 +113,7 @@ bool Expression::isHeadLambda() const noexcept{
   return ((m_head.isSymbol()) && (m_head.asSymbol() == "lambda"));
 }
 
+
 Expression::List Expression::asList() const noexcept{
   
   List result;
@@ -109,29 +132,32 @@ Expression::Lambda Expression::asLambda() const noexcept{
   return result;
 }
 
-void Expression::append(const Atom & a){
-  m_tail.emplace_back(a);
-}
-
-
-Expression * Expression::tail(){
-  Expression * ptr = nullptr;
+Expression::String Expression::asString(){
   
-  if(m_tail.size() > 0){
-    ptr = &m_tail.back();
+  String result;
+  
+  // Cut off extra quotation marks for easier comparison
+  if(isHeadString()){
+    String str = m_head.asString();
+    if(str.length > 1){
+      result = str.substr(1, str.length - 2);
+    }
   }
-
-  return ptr;
+  
+  return result;
 }
 
-Expression::ConstIteratorType Expression::tailConstBegin() const noexcept{
-  return m_tail.cbegin();
-}
+Expression Expression::getProperty(String key){
 
-Expression::ConstIteratorType Expression::tailConstEnd() const noexcept{
-  return m_tail.cend();
+  // Search this Expression's property list for key
+  auto result = this->m_props.find(key);
+  if(result != this->m_props.end()){
+    return result->second;
+  }
+  
+  // Default return NONE
+  return Expression();
 }
-
 
 Expression Expression::apply(const Atom & op, const List & args, const Environment & env){
 

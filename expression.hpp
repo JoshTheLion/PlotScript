@@ -97,6 +97,12 @@ public:
   /// value of Expression as a Lambda pair (params, proc), return empty pair if not a Lambda
   Lambda asLambda() const noexcept;
 
+  // Convenience member for external checks
+  String asString();
+
+  // Temporary accessor method until I fix built-in methods later
+  Expression getProperty(String key);
+
   /// Evaluate expression using a post-order traversal (recursive)
   Expression eval(Environment & env);
   
