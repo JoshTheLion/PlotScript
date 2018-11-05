@@ -1,44 +1,50 @@
 #ifndef NOTEBOOK_APP_H
 #define NOTEBOOK_APP_H
 
-#include <QWidget>
-#include <QLayout>
-#include <QDebug>
-#include <QString>
-#include <string>
-
 #include "input_widget.hpp"
 #include "output_widget.hpp"
 #include "interpreter.hpp"  // Access to PlotScript
 #include "startup_config.hpp" // Access to startup.pls
+#include "settings.h" // Access to result settings struct
 
-class NotebookApp: public QWidget
-{
-Q_OBJECT
+#include <QWidget>
+#include <QLayout>
+#include <QDebug>
+#include <QVector>
+#include <QPoint>
+#include <QString>
+#include <string>
 
-public:
-	NotebookApp(QWidget * parent = nullptr);
+class NotebookApp : public QWidget {
+  Q_OBJECT
 
-private slots:
-	void getUserText(QString inExp);
-
-signals:
-    //void resultEvaluated(QString outExp);
-    void graphicsResult(QGraphicsItem * item);
-
-private:
-	InputWidget * input;
-	OutputWidget * output;
-    Interpreter m_interp;
-    //QString m_strResult;
-    //Expression m_expResult;
-
-    // Mimick Plotscript
-    int startup(Interpreter & interp);
-    void evalExpression(std::string inExp);
-    QGraphicsTextItem * errFormat(std::string message);
+  public:
     
+    NotebookApp(QWidget * parent = nullptr);
+
+  private slots:
+    
+    void getUserText(QString inExp);
+
+  private:
+    
+    // Composite objects
+    InputWidget * m_input;
+    OutputWidget * m_output;
+    Interpreter m_interp;
+    Settings * m_result;
+
+    // Mimick Plotscript to evaluate input
+    int startup(Interpreter & interp);
+    bool evalExpression(std::string inExp);
+    Settings errFormat(const std::string & message);
+
     // Assign result to QGraphicsItem equivalent
     void setGraphicsType(Expression exp);
+
+  signals:
+
+    void sendResult(Settings data);
 };
+
 #endif // NOTEBOOK_APP_H

@@ -134,7 +134,7 @@ Expression::Lambda Expression::asLambda() const noexcept{
 
 Expression::String Expression::asString(){
   
-  String result;
+  String result = "default";
   
   // Cut off extra quotation marks for easier comparison
   if(isHeadString()){

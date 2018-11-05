@@ -9,19 +9,22 @@
 #include <QString>
 #include <string>
 
-class InputWidget: public QPlainTextEdit
-{
-Q_OBJECT
+class InputWidget : public QPlainTextEdit {
+  Q_OBJECT
 
-public:
-	InputWidget(QWidget * parent = nullptr);
+  public:
+    
+    InputWidget(QWidget * parent = nullptr);
 
-signals:
+  signals:
+    
     // Sends the entire plaintext contents of the document for eval
     void textUpdated(QString text);
-	
-private:
+
+  private:
+    
     // Override inherited to catch Shift+Enter
     void keyPressEvent(QKeyEvent *event); 
 };
+
 #endif // INPUT_WIDGET_H
