@@ -7,6 +7,7 @@
 #include <QGraphicsWidget>
 #include <QGraphicsView>
 #include <QGraphicsScene>
+#include <QFont>
 
 #include <QPainter>
 #include <QBrush>
@@ -64,10 +65,11 @@ void OutputWidget::drawItem(Settings data){
   switch(name){
     case Settings::Type::Text_Type:
       //QGraphicsTextItem *QGraphicsScene::addText(const QString &text, const QFont &font = QFont())
-      m_item = m_scene->addText(data.text);
+      m_item = m_scene->addText(data.text, QFont());
     
       //void QGraphicsItem::setPos(const QPointF &pos)
-      m_item->setPos(data.pos);
+      //m_item->setPos(data.pos);
+      m_item->moveBy(data.pos.x(), data.pos.y());
       //m_item->setPos(50, 50);
 
       qDebug() << "Text Data:";
@@ -81,16 +83,23 @@ void OutputWidget::drawItem(Settings data){
       //QRectF(qreal x, qreal y, qreal width, qreal height)
       QRectF frame(0, 0, data.size, data.size);
 
+      // Center the rect at the origin of its local item coordinates
       //void QRectF::moveCenter(const QPointF &position)
-      frame.moveCenter(data.pos);
+      frame.moveCenter(QPointF(0, 0));
 
+      // Create an Ellipse bounded by the QRectF and add to scene
       //QGraphicsEllipseItem *QGraphicsScene::addEllipse(const QRectF &rect, const QPen &pen = QPen(), const QBrush &brush = QBrush())
       m_item = m_scene->addEllipse(frame, QPen(Qt::black), QBrush(Qt::black));
-      //m_item->sceneBoundingRect().moveCenter(data.pos);
+      
+      // Move item to specified location
+      //void QGraphicsItem::prepareGeometryChange()
+      //void QRectF::translate(qreal dx, qreal dy)
+      //void QGraphicsItem::moveBy(qreal dx, qreal dy)
+      m_item->moveBy(data.pos.x(), data.pos.y());
 
       qDebug() << "Ellipse Data:";
       qDebug() << "Rect Center: " << frame.center();
-      qDebug() << m_item->sceneBoundingRect().center() << m_item->childrenBoundingRect().center();
+      qDebug() << m_item->boundingRect().center() << m_item->childrenBoundingRect().center();
       qDebug() << "Item Pos: " << m_item->pos();
       qDebug() << "Scene Pos: " << m_item->scenePos();
       qDebug() << "View Pos: " << m_view->itemAt(0, 0) << m_view->itemAt(data.pos);
