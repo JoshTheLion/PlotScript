@@ -98,10 +98,19 @@ public:
   Lambda asLambda() const noexcept;
 
   // Convenience member for external checks
-  String asString();
+  String asString() const noexcept;
 
   // Temporary accessor method until I fix built-in methods later
-  Expression getProperty(String key);
+  Expression getProperty(String key) const noexcept;
+  
+  /// convienience member to determine if Expression is a Graphic Primitive Point
+  bool isPointG() const noexcept;
+
+  /// convienience member to determine if Expression is a Graphic Primitive Line
+  bool isLineG() const noexcept;
+
+  /// convienience member to determine if Expression is a Graphic Primitive Text
+  bool isTextG() const noexcept;
 
   /// Evaluate expression using a post-order traversal (recursive)
   Expression eval(Environment & env);

@@ -132,7 +132,7 @@ Expression::Lambda Expression::asLambda() const noexcept{
   return result;
 }
 
-Expression::String Expression::asString(){
+Expression::String Expression::asString() const noexcept{
   
   String result = "default";
   
@@ -150,7 +150,11 @@ Expression::String Expression::asString(){
   return result;
 }
 
-Expression Expression::getProperty(String key){
+/***********************************************************************
+Property List and Graphic Primitive Methods
+**********************************************************************/
+
+Expression Expression::getProperty(const String key) const noexcept{
 
   // Search this Expression's property list for key
   auto result = this->m_props.find(key);
@@ -161,6 +165,39 @@ Expression Expression::getProperty(String key){
   // Default return NONE
   return Expression();
 }
+
+bool Expression::isPointG() const noexcept{
+  
+  if(getProperty("\"object-name\"").m_head.asString() == "\"point\""){
+    if(isHeadList() && (m_tail.size() == 2)){
+      if (m_tail[0].isHeadNumber() && m_tail[1].isHeadNumber()){
+        return true;
+      }
+    }
+  }
+  return false;
+}
+
+bool Expression::isLineG() const noexcept{
+  
+  if(getProperty("\"object-name\"").m_head.asString() == "\"line\""){
+    if(isHeadList() && (m_tail.size() == 2)){
+      //if( m_tail[0].isPointG() && m_tail[1].isPointG() ){
+        return true;
+      //}
+    }
+  }
+  return false;
+}
+
+bool Expression::isTextG() const noexcept{
+  
+  return ( isHeadString() && (getProperty("\"object-name\"").m_head.asString() == "\"text\"") );
+}
+
+/***********************************************************************
+Private Methods
+**********************************************************************/
 
 Expression Expression::apply(const Atom & op, const List & args, const Environment & env){
 
