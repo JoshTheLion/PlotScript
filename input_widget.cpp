@@ -19,7 +19,7 @@ void InputWidget::keyPressEvent(QKeyEvent * keyEvent){
 
     // Extract Expression from document
     QString inputExp = QPlainTextEdit::toPlainText();
-    qDebug() << "Signal: " << inputExp << "\n";
+    qDebug() << "\nSignal: " << inputExp << "\n";
 
     // Send Expression to be evaluated
     emit textUpdated(inputExp);

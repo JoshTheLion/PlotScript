@@ -22,7 +22,7 @@ class NotebookApp : public QWidget {
     
     NotebookApp(QWidget * parent = nullptr);
 
-  private slots:
+  public slots:
     
     void getUserText(QString inExp);
 
@@ -32,7 +32,7 @@ class NotebookApp : public QWidget {
     InputWidget * m_input;
     OutputWidget * m_output;
     Interpreter m_interp;
-    Settings * m_result;
+    //Settings * m_result;
 
     // Mimick Plotscript to evaluate input
     int startup(Interpreter & interp);
@@ -40,7 +40,7 @@ class NotebookApp : public QWidget {
     Settings errFormat(const std::string & message);
 
     // Assign result to QGraphicsItem equivalent
-    void setGraphicsType(Expression exp);
+    Settings setGraphicsType(Expression exp);
 
   signals:
 

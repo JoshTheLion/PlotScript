@@ -105,22 +105,26 @@ bool NotebookApp::evalExpression(std::string inExp){
   }
   
   qDebug() << "Expression Out: " << QString::fromStdString(strResult);
-  setGraphicsType(expResult);
+  Settings result = setGraphicsType(expResult);
+  emit sendResult(result);
   return EXIT_SUCCESS;
 }
 
-void NotebookApp::setGraphicsType(Expression outExp){
+Settings NotebookApp::setGraphicsType(Expression outExp){
 
   // The graphic object data to send to outputWidget
   Settings data;
-
-  // Convert Expression->string
-  std::ostringstream stream;
-  stream << outExp;
   
   // Pull out necessary parts of result Expression
-  std::string expName = outExp.getProperty("\"object-name\"").asString();
-  std::string expValue = stream.str();
+  Expression propExp = outExp.getProperty("\"object-name\"");
+  std::ostringstream nameStream;
+  nameStream << propExp;
+  std::string expName = nameStream.str();
+
+  // Convert Expression->string
+  std::ostringstream expStream;
+  expStream << outExp;
+  std::string expValue = expStream.str();
   
   qDebug() << "Data: " << QString::fromStdString(expName) << QString::fromStdString(expValue);
   
@@ -129,7 +133,7 @@ void NotebookApp::setGraphicsType(Expression outExp){
     // Display nothing for procedures
     data = Settings();
   }
-  else if(expName == "text"){
+  else if(outExp.isTextG()){
     
     QString text = QString::fromStdString(outExp.asString());
     
@@ -141,37 +145,28 @@ void NotebookApp::setGraphicsType(Expression outExp){
     if(outExp.getProperty("\"position\"") != Expression()){
       
       Expression expProp = outExp.getProperty("\"position\"");
-      std::string type = expProp.getProperty("\"object-name\"").asString();
 
-      if((type == "point") && (expProp.isHeadList())){
+      if(expProp.isPointG()){
         Expression::List points = expProp.asList();
         x = points[0].head().asNumber();
         y = points[1].head().asNumber();
       }
       else{
-        // Error message
-        emit sendResult(errFormat("Error: Position not a point"));
-        return;
+        return errFormat("Error: Position not a point");
       }
     }
     
     // Package result values for output
     data = Settings(Settings::Type::Text_Type, QPoint(x,y), text);
   }
-  else if((expName == "point") || (expName == "\"point\"")){
-    
-    if(!outExp.isHeadList()){
-      // Error message
-      emit sendResult(errFormat("Error: Position not a point"));
-      return;
-    }
+  else if(outExp.isPointG()){
 
-    // Centered at the Point's coordinates with a diameter equal to the size property
+    // Center at the Point's coordinates with a diameter equal to the size property
     Expression::List points = outExp.asList();
+    
     double x = points[0].head().asNumber();
     double y = points[1].head().asNumber();
-    
-    // Default (should be 0 for submission)
+
     double size = 0;
     
     // If "size" is present in the property list, it is an error if this property is not a positive Number.
@@ -183,40 +178,72 @@ void NotebookApp::setGraphicsType(Expression outExp){
         size = outExp.getProperty("\"size\"").head().asNumber();
       }
       else{
-        // Error message
-        emit sendResult(errFormat("Error: Size is not a positive number"));
-        return;
+        return errFormat("Error: Size is not a positive number");
       }
     }
-    
-    qDebug() << "Point Data: " << x << y << size;
     
     // Package result values for output
     data = Settings(Settings::Type::Point_Type, QPoint(x, y), size);
   }
-  /*
-  else if(expName == "\"line\""){
-    // starting at the position indicated by it's position property.
-    // If present in the property list, it is an error if this property is not a Point.
+  else if(outExp.isLineG()){
+
+    // Use the Line's coordinates with a thickness equal to the thickness property.
+    Expression::List points = outExp.asList();
     
-  }
-  else if(outExp.isHeadList()){
-    // Recursively display each entry using the rules above without any surrounding parenthesis.
-    //for(auto e : exp.asList());
-      // Display e
+    Expression::List point1 = points[0].asList();
+    Expression::List point2 = points[1].asList();
+
+    double x1 = point1[0].head().asNumber();
+    double y1 = point1[1].head().asNumber();
     
-  }
-  */
-  else{ // None, Number, Complex, Symbol, String, and error messages
+    double x2 = point2[0].head().asNumber();
+    double y2 = point2[1].head().asNumber();
+
+    QPoint p1(x1, y1);
+    QPoint p2(x2, y2);
+    
+    double thicc = 1;
+    
+    // If "thickness" is present in the property list, it is an error if this property is not a positive Number.
+    if(outExp.getProperty("\"thickness\"") != Expression()){
+      
+      Expression expProp = outExp.getProperty("\"thickness\"");
+
+      if( expProp.head().isNumber() && (expProp.head().asNumber() > 0 ) ){
+        thicc = outExp.getProperty("\"thickness\"").head().asNumber();
+      }
+      else{
+        return errFormat("Error: Thickness is not a positive number");
+      }
+    }
     
     // Package result values for output
-    data = Settings(Settings::Type::Text_Type, QPoint(0,0), QString::fromStdString(expValue));//item = new QGraphicsTextItem(expValue);
+    data = Settings(Settings::Type::Line_Type, p1, p2, thicc);
+  }
+  else if(outExp.isHeadList() && (!outExp.isTailEmpty())){
+
+    // Recursively display each entry using the rules above without any surrounding parenthesis.
+    QVector<Settings> list;
+    for(Expression exp : outExp.asList()){
+      list.push_back(setGraphicsType(exp));//setGraphicsType(exp);
+    }
+    
+    // Package result values for output
+    data = Settings(Settings::Type::List_Type, list);
+    // Can't continue to emit command bc returning default clears the output display
+    //return Settings();
+  }
+  else{ // None, Number, Complex, Symbol, String
+    
+    // Package result values for output
+    data = Settings(Settings::Type::Text_Type, QPoint(0.0, 0.0), QString::fromStdString(expValue));//item = new QGraphicsTextItem(expValue);
   }
   
-  qDebug() << "Signal: " << data.itemType << "\n";
+  qDebug() << "Result: " << data.itemType;
   
-  // Send graphic item parameters to output
-  emit sendResult(data);
+  // Send graphic item parameters to output widget to display
+  //emit sendResult(data);
+  return data;
 }
 
 
