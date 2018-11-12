@@ -133,7 +133,7 @@ void OutputWidget::drawItem(Settings data){
     qDebug() << "Ellipse Data: ";
     qDebug() << "Rect Center: " << m_item->mapToScene(m_item->boundingRect().center()) << m_item->childrenBoundingRect().center();
     qDebug() << "Item Pos: " << m_item->pos(); // Position of item's center point in parent coordinates
-    qDebug() << "Scene Pos: " << m_item->scenePos() << m_scene->itemAt(data.pos, QTransform::QTransform());
+    qDebug() << "Scene Pos: " << m_item->scenePos() << m_scene->itemAt(data.pos, QTransform());
     qDebug() << "View Pos: " << m_view->itemAt(0, 0) << m_view->itemAt(data.pos);
     break;
 
