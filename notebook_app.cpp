@@ -130,6 +130,7 @@ Settings NotebookApp::setGraphicsType(Expression outExp){
   
   // Assign graphic type and parameter data based on result
   if(outExp.isHeadLambda()){
+    
     // Display nothing for procedures
     data = Settings();
   }
@@ -137,13 +138,15 @@ Settings NotebookApp::setGraphicsType(Expression outExp){
     
     QString text = QString::fromStdString(outExp.asString());
     
-    // Position coordinates, default to origin
+    // Default values
     double x = 0;
     double y = 0;
+    double scale = 1;
+    double rotate = 0;
 
     // If "position" is in prop list, must be type "point" or error
     if(outExp.getProperty("\"position\"") != Expression()){
-      
+
       Expression expProp = outExp.getProperty("\"position\"");
 
       if(expProp.isPointG()){
@@ -156,8 +159,31 @@ Settings NotebookApp::setGraphicsType(Expression outExp){
       }
     }
     
+    // If "text-scale" is in prop list, it should be a positive Number
+    if(outExp.getProperty("\"text-scale\"") != Expression()){
+
+      Expression expProp = outExp.getProperty("\"text-scale\"");
+
+      if( expProp.isHeadNumber() && (expProp.head().asNumber() > 0) ){
+        scale = expProp.head().asNumber();
+      }
+    }
+    
+    // If "text-rotation" is in prop list, it should be a Number in radians
+    if (outExp.getProperty("\"text-rotation\"") != Expression()) {
+
+      Expression expProp = outExp.getProperty("\"text-rotation\"");
+
+      if (expProp.isHeadNumber()) {
+        // Convert input to degrees for rotate function to work
+        double rad = expProp.head().asNumber();
+        double deg = rad * (180/std::atan2(0, -1));
+        rotate = deg;
+      }
+    }
+
     // Package result values for output
-    data = Settings(Settings::Type::Text_Type, QPoint(x,y), text);
+    data = Settings(Settings::Type::Text_Type, QPoint(x,y), text, scale, rotate);
   }
   else if(outExp.isPointG()){
 
@@ -225,24 +251,21 @@ Settings NotebookApp::setGraphicsType(Expression outExp){
     // Recursively display each entry using the rules above without any surrounding parenthesis.
     QVector<Settings> list;
     for(Expression exp : outExp.asList()){
-      list.push_back(setGraphicsType(exp));//setGraphicsType(exp);
+      list.push_back(setGraphicsType(exp));
     }
     
     // Package result values for output
     data = Settings(Settings::Type::List_Type, list);
-    // Can't continue to emit command bc returning default clears the output display
-    //return Settings();
   }
   else{ // None, Number, Complex, Symbol, String
     
     // Package result values for output
-    data = Settings(Settings::Type::Text_Type, QPoint(0.0, 0.0), QString::fromStdString(expValue));//item = new QGraphicsTextItem(expValue);
+    data = Settings(Settings::Type::TUI_Type, QString::fromStdString(expValue));
   }
   
   qDebug() << "Result: " << data.itemType;
   
   // Send graphic item parameters to output widget to display
-  //emit sendResult(data);
   return data;
 }
 
@@ -251,5 +274,5 @@ Settings NotebookApp::errFormat(const std::string & message){
   
   QString error = QString::fromStdString(message);
   
-  return Settings(Settings::Type::Text_Type, QPoint(0,0), error);
+  return Settings(Settings::Type::TUI_Type, error);
 }

@@ -31,12 +31,17 @@ OutputWidget::OutputWidget(QWidget * parent){
 
     m_view = new QGraphicsView(m_scene, parent);
     m_view->setObjectName("myView");
-
-    auto layout = new QGridLayout;
-
-    layout->addWidget(m_view, 0, 0);
     
-    this->setLayout(layout);
+    m_view->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+    m_view->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+    
+    m_layout = new QGridLayout;
+
+    m_layout->addWidget(m_view, 0, 0);
+    m_view->centerOn(0, 0);
+    
+    this->setLayout(m_layout);
+    this->show();
 }
 
 void OutputWidget::getResult(Settings result){
@@ -44,7 +49,9 @@ void OutputWidget::getResult(Settings result){
   // Remove old graphic item first
   m_scene->clear();
   m_item = nullptr;
-  m_view->centerOn(0, 0);
+  
+  // Draw cosmetic lines at scene origin for visual reference
+  //drawCrosshairs();
 
   // Display new graphic item
   if(result.itemType != Settings::Type::None_Type){
@@ -62,75 +69,78 @@ void OutputWidget::drawItem(Settings data){
   QPen pen;
   pen.setColor(Qt::black);
   pen.setBrush(Qt::SolidPattern);
-  QRectF box; // Had to declare this up here for some stupid "failed to initialize" reason
+  
+  // Compiler forced me to declare these up here for some reason
+  QRectF bRect;
+  double dx;
+  double dy;
 
-  Settings::Type name = data.itemType;//QString label = item->data(ObjectType).toString();
+  Settings::Type name = data.itemType;
 
   switch (name) {
   case Settings::Type::TUI_Type:
 
-    //QGraphicsTextItem *QGraphicsScene::addText(const QString &text, const QFont &font = QFont())
     m_item = m_scene->addText(data.text, QFont());
-    m_view->centerOn(0, 0);
 
     break;
 
   case Settings::Type::Text_Type:
+    
+    // Initialize Text item
+    m_item = m_scene->addText(data.text, QFont("Courier", 1, 1, false));
+    m_item->setScale(data.scale);
+    
+    // Translate item center-point to scene origin
+    dx = 0 - (m_item->boundingRect().center().x());
+    dy = 0 - (m_item->boundingRect().center().y());
+    m_item->moveBy(dx, dy);
+    
+    // Re-assign item origin used for transformations
+    m_item->setTransformOriginPoint(m_item->boundingRect().center());
+    
+    qDebug() << "Transform Origin Point 1: " << m_item->transformOriginPoint() << m_item->mapToScene(m_item->transformOriginPoint());
 
-    //QGraphicsTextItem *QGraphicsScene::addText(const QString &text, const QFont &font = QFont())
-    m_item = m_scene->addText(data.text, QFont());
-    m_view->centerOn(0, 0);
+    // Should now rotate around item's center instead of corner
+    m_item->setRotation(data.rotate);
 
-    //void QGraphicsItem::setPos(const QPointF &pos)
-    //m_item->moveBy(data.pos.x(), data.pos.y());
-    m_item->setPos(data.pos);
+    // Translate item center-point to input coordinates
+    m_item->moveBy(data.pos.x(), data.pos.y());
+
+    qDebug() << "Transform Origin Point 2: " << m_item->transformOriginPoint() << m_item->mapToScene(m_item->transformOriginPoint());
 
     qDebug() << "Text Data: ";
-    qDebug() << "Rect Corner: " << m_item->boundingRect().topLeft() << m_item->childrenBoundingRect().topLeft();
+    qDebug() << "Item Rect Corners: " << m_item->boundingRect().topLeft() << m_item->boundingRect().bottomRight();
+    qDebug() << "Item Rect Center: " << m_item->boundingRect().center();
     qDebug() << "Item Pos: " << m_item->pos();
+    qDebug() << "Scene Rect Corners: " << m_item->sceneBoundingRect().topLeft() << m_item->sceneBoundingRect().bottomRight();
+    qDebug() << "Scene Rect Center: " << m_item->sceneBoundingRect().center();
     qDebug() << "Scene Pos: " << m_item->scenePos();
     qDebug() << "View Pos: " << m_view->itemAt(0, 0) << m_view->itemAt(data.pos);
     break;
 
   case Settings::Type::Point_Type:
 
-    //QRectF(qreal x, qreal y, qreal width, qreal height)
-    box = QRectF(0.0, 0.0, data.size, data.size);
-
-    // Center the rect at the origin of its local item coordinates
-    //void QRectF::moveCenter(const QPointF &position)
-    box.moveCenter(QPointF(0.0, 0.0));
+    // Initialize and center a bounding rect at the origin of its local item coordinates
+    bRect = QRectF(0.0, 0.0, data.size, data.size);
+    bRect.moveCenter(QPointF(0.0, 0.0));
 
     // Create an Ellipse bounded by the QRectF and add to scene
-    //QGraphicsEllipseItem *QGraphicsScene::addEllipse(const QRectF &rect, const QPen &pen = QPen(), const QBrush &brush = QBrush())
-    m_item = m_scene->addEllipse(box, pen, pen.brush());
-    m_view->centerOn(0, 0);
+    m_item = m_scene->addEllipse(bRect, pen, pen.brush());
     
     // Move item to specified location
-    //void QGraphicsItem::prepareGeometryChange()
-    //void QRectF::translate(qreal dx, qreal dy)
-    //void QGraphicsItem::moveBy(qreal dx, qreal dy)
-    //m_item->moveBy(data.pos.x(), data.pos.y());
-    m_item->setPos(data.pos);
+    m_item->moveBy(data.pos.x(), data.pos.y());
 
     qDebug() << "Ellipse Data: ";
-    qDebug() << "Rect Center: " << m_item->boundingRect().center() << m_item->childrenBoundingRect().center();
-    qDebug() << "Item Pos: " << m_item->pos();
-    qDebug() << "Scene Pos: " << m_item->scenePos();
+    qDebug() << "Rect Center: " << m_item->mapToScene(m_item->boundingRect().center()) << m_item->childrenBoundingRect().center();
+    qDebug() << "Item Pos: " << m_item->pos(); // Position of item's center point in parent coordinates
+    qDebug() << "Scene Pos: " << m_item->scenePos() << m_scene->itemAt(data.pos, QTransform::QTransform());
     qDebug() << "View Pos: " << m_view->itemAt(0, 0) << m_view->itemAt(data.pos);
     break;
 
   case Settings::Type::Line_Type:
 
-    //pen.setWidth(thickness);
-    //pen = QPen(Qt::black)
     pen.setWidth(data.thicc);
-
-    //QGraphicsLineItem *QGraphicsScene::addLine(qreal x1, qreal y1, qreal x2, qreal y2, const QPen &pen = QPen())
     m_item = m_scene->addLine(QLineF(data.p1, data.p2), pen);
-    //m_item = m_scene->addLine(QLineF(QPoint(0, 0), QPoint(50, 50)), pen);
-    m_view->centerOn(0, 0);
-    //m_item->setPos(data.pos);
 
     qDebug() << "Line Data: ";
     qDebug() << "Rect Center: " << m_item->boundingRect().center() << m_item->childrenBoundingRect().center();
@@ -152,9 +162,25 @@ void OutputWidget::drawItem(Settings data){
 
   default:
 
-    qDebug() << "Stopped Recursion";
+    qDebug() << "Invalid Item Type";
     break;
   }
+  // Manually re-focus the view
+  m_view->fitInView(m_scene->itemsBoundingRect(), Qt::KeepAspectRatio);
 }
 
+void OutputWidget::drawCrosshairs(){
+  
+  QPen p;
+  p.setWidth(0);
+
+  m_scene->addLine(QLineF(QPoint(-10, 0), QPoint(10, 0)), p);
+  m_scene->addLine(QLineF(QPoint( 0,-10), QPoint(0, 10)), p);
+}
+
+void OutputWidget::resizeEvent(QResizeEvent * event){
+  
+  // Automatically re-focus the view when widget is resized
+  m_view->fitInView(m_scene->itemsBoundingRect(), Qt::KeepAspectRatio);
+}
 

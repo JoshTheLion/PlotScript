@@ -1,7 +1,7 @@
 #ifndef OUTPUT_WIDGET_H
 #define OUTPUT_WIDGET_H
 
-#include "settings.h" // Access to result settings struct
+#include "settings.h"
 
 #include <QWidget>
 #include <QLayout>
@@ -25,9 +25,14 @@ class OutputWidget : public QWidget {
     // Composite objects
     QGraphicsScene * m_scene;
     QGraphicsView * m_view;
+    QGridLayout * m_layout;
     QGraphicsItem * m_item;
     
     void drawItem(Settings data);
+    void drawCrosshairs();
+    
+    // Override to keep scene graphics in view
+    void resizeEvent(QResizeEvent * event);
 };
 
 #endif // OUTPUT_WIDGET_H

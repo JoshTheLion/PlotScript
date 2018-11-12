@@ -3,9 +3,9 @@
 
 #include "input_widget.hpp"
 #include "output_widget.hpp"
-#include "interpreter.hpp"  // Access to PlotScript
-#include "startup_config.hpp" // Access to startup.pls
-#include "settings.h" // Access to result settings struct
+#include "interpreter.hpp"
+#include "startup_config.hpp"
+#include "settings.h"
 
 #include <QWidget>
 #include <QLayout>
@@ -32,7 +32,6 @@ class NotebookApp : public QWidget {
     InputWidget * m_input;
     OutputWidget * m_output;
     Interpreter m_interp;
-    //Settings * m_result;
 
     // Mimick Plotscript to evaluate input
     int startup(Interpreter & interp);
