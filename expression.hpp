@@ -100,8 +100,11 @@ public:
   // Convenience member for external checks
   String asString() const noexcept;
 
-  // Temporary accessor method until I fix built-in methods later
-  Expression getProperty(String key) const noexcept;
+  // Convenient helper method for special-form equivalent
+  void setProperty(const String key, Expression value);
+
+	// Convenient helper method for special-form equivalent
+	Expression getProperty(const String key) const noexcept;
   
   /// convienience member to determine if Expression is a Graphic Primitive Point
   bool isPointG() const noexcept;

@@ -153,6 +153,16 @@ Expression::String Expression::asString() const noexcept{
 /***********************************************************************
 Property List and Graphic Primitive Methods
 **********************************************************************/
+void Expression::setProperty(const String key, Expression value)
+{
+  // Add/reset (key, value) to this Expression's property list
+  if(this->m_props.find(key) != this->m_props.end()){
+    std::swap(this->m_props.at(key), value);
+  }
+  else{
+		this->m_props.emplace(key, value);
+  }
+}
 
 Expression Expression::getProperty(const String key) const noexcept{
 
@@ -487,16 +497,12 @@ Expression Expression::set_property(Environment & env)
   // Evaluate main Expression and copy result (including m_props)
   Expression result = m_tail[2].eval(env);
 
-  // Add/reset (key, value) to property list of copied Expression
-  if(result.m_props.find(key) != result.m_props.end()){
-    std::swap(result.m_props.at(key), value);
-  }
-  else{
-    result.m_props.emplace(key, value);
-  }
+	// Add to property List
+	result.setProperty(key, value);
+
   // Return copied Expression with modified property list
   return result;
-};
+}
 
 /*
  * (get-property <String> <Expression>)
@@ -522,13 +528,7 @@ Expression Expression::get_property(Environment & env)
   // tail[1] can be any valid Expression
   Expression exp = m_tail[1].eval(env);
 
-  // Search property list of tail[1] copy for key
-  auto result = exp.m_props.find(key);
-  if(result != exp.m_props.end()){
-    return result->second;
-  }
-
-  return Expression();
+  return exp.getProperty(key);
 }
 
 // this is a simple recursive version. the iterative version is more
