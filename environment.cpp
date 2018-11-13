@@ -600,6 +600,133 @@ Expression make_range(const std::vector<Expression> & args)
 };
 
 
+
+/*
+ * (discrete-plot DATA OPTIONS)
+ * A binary procedure that takes a List of (x,y) point coordinates and
+ * a List of (String, Value) pairs specifying one of the following
+ * plotting options:
+ *
+ *    "title"           - followed by a String representing the title text
+ *                        of the plot.
+ *    "abscissa-label"  - followed by a String representing the text of the
+ *                        abscissa (horizontal, x) label.
+ *    "ordinate-label"  - followed by a String representing the text of the
+ *                        ordinate (vertical, y) label.
+ *    "text-scale"      - positive Number representing the scale factor to
+ *                        apply to all text in the plot, defaults to 1.
+ *
+ * It returns a List of Graphic objects that render a stem plot of the data.
+*/
+Expression discrete_plot(const std::vector<Expression> & args)
+{
+  // DATA is the List of Number coordinates (note, they are not required to
+  // have the "point" object-name), and OPTIONS is a List of Lists, each entry
+  // being a String Expression followed by an arbitrary Expression
+  
+	Expression::List result; // List of Lines, Points, and Text Graphic objects
+
+	if(nargs_equal(args, 2)){
+		if( (args[0].isHeadList()) && (args[1].isHeadList()) ){
+			// Store values in local variable for readability
+			Expression::List data = args[0].asList();
+			Expression::List options = args[1].asList();
+			
+			/*--- Declare Default Layout Parameters ---*/
+			double N = 20;		// Scale for the N x N bounding rect
+			double A = 3;			// Vertical offset distance for title and axes labels
+			double B = 3;			// Horizontal offset distance for title and axes labels
+			double C = 2;			// Vertical offset distance for tick labels
+			double D = 2;			// Horizontal offset distance for tick labels
+			double P = 0.5;		// Size of points
+			double txtScale = 1;	// Scaling factor for all Text
+
+			/*--- Read and process each Data List entry ---*/
+			for(auto & point : data){
+				// Each Data entry must a List of 2 Numbers or error
+				if(point.isHeadList() && (point.asList().size() == 2)){
+					if(point.asList()[0].isHeadNumber() && point.asList()[1].isHeadNumber()){
+						
+						/*--- Keep track of the max and min x and y values ---*/
+
+						// Create and add a Point graphic item to result
+						Expression item = make_list(point.asList());
+						item.setProperty("\"object-name\"", Expression(Atom("\"point\"")));
+						item.setProperty("\"size\"", Expression(Atom(P)));
+						result.push_back(item);
+					}
+					else{
+						throw SemanticError("Error: found invalid Data point");
+					}
+				}
+				else{
+					throw SemanticError("Error: found invalid Data point");
+				}
+			}
+			
+			/*--- Setup graphical layout data ---*/
+			// Make some sort of function for this
+
+			/*--- Read and process each Options List entry ---*/
+			for(auto & option : options){
+				// Each Options entry must a List of 2 Expressions
+				if(option.isHeadList() && (option.asList().size() == 2)){
+					if(option.asList()[0].isHeadString()){
+						
+						std::string name = option.asList()[0].asString();
+						Expression value = option.asList()[1];
+						
+						// Check which(if any) plotting option to assign
+						if(name == "title"){
+							// Title value must be a String
+							if(value.isHeadString()){
+								// Create and add a Text graphic item to result
+								Expression item(value);
+								item.setProperty("\"object-name\"", Expression(Atom("\"text\"")));
+								item.setProperty("\"text-scale\"", Expression(Atom(txtScale)));
+								// Set location properties
+
+								result.push_back(item);
+							}
+						}
+						else if(name == "abscissa-label"){
+							// stub
+						}
+						else if(name == "ordinate-label"){
+							// stub
+						}
+						else if(name == "text-scale"){
+							// Must be a positive Number, defaults to 1
+							if(value.isHeadNumber() && (value.head().asNumber() > 0)){
+								txtScale = value.head().asNumber();
+							}
+						}
+						else{
+							throw SemanticError("Error: found invalid Option");
+						}
+						// end selection
+					}
+					else{
+						throw SemanticError("Error: found invalid Option");
+					}
+				}
+				else{
+					throw SemanticError("Error: found invalid Option");
+				}
+			} // end for
+
+		}
+		else{
+			throw SemanticError("Error: an argument to discrete-plot is not a list");
+		}
+	}
+	else{
+		throw SemanticError("Error: invalid number of arguments in call to discrete-plot");
+	}
+
+	return Expression(result);
+};
+
 /***********************************************************************
 Built-In Symbols
 **********************************************************************/
@@ -781,6 +908,9 @@ void Environment::reset(){
 
   // Procedure: range;
   envmap.emplace("range", EnvResult(ProcedureType, make_range));
+
+  // Procedure: discrete-plot;
+  envmap.emplace("discrete-plot", EnvResult(ProcedureType, discrete_plot));
 }
 
 bool Environment::operator==(const Environment & env) const noexcept{
