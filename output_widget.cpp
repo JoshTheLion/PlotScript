@@ -51,7 +51,7 @@ void OutputWidget::getResult(Settings result){
   m_item = nullptr;
   
   // Draw cosmetic lines at scene origin for visual reference
-  drawCrosshairs();
+  //drawCrosshairs();
 
   // Display new graphic item
   if(result.itemType != Settings::Type::None_Type){
