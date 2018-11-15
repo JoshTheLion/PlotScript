@@ -235,7 +235,7 @@ Settings NotebookApp::setGraphicsType(Expression outExp){
       
       Expression expProp = outExp.getProperty("\"thickness\"");
 
-      if( expProp.head().isNumber() && (expProp.head().asNumber() > 0 ) ){
+      if( expProp.head().isNumber() && (expProp.head().asNumber() >= 0 ) ){
         thicc = outExp.getProperty("\"thickness\"").head().asNumber();
       }
       else{

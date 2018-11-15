@@ -3,8 +3,11 @@
 #include "semantic_error.hpp"
 
 #include <sstream>
+#include <iomanip>
 #include <list>
 #include <vector>
+#include <algorithm>
+#include <string>
 
 Expression::Expression(){}
 
@@ -205,6 +208,462 @@ bool Expression::isTextG() const noexcept{
   return ( isHeadString() && (getProperty("\"object-name\"").m_head.asString() == "\"text\"") );
 }
 
+
+/*
+std::vector<double> Expression::getDataExtrema(const Expression::List & dataList){
+	
+	// Must be at least 2 points to process
+	if(dataList.size() >= 2){
+		throw SemanticError("Error: invalid number of Data points");
+	}
+	
+	// Store data in tail, props in prop list
+	//std::vector<double> data;
+	//Expression result;
+	
+	// Initialize extrema point data
+	double xMax = 0; double yMax = 0;
+	double xMin = 0; double yMin = 0;
+	
+	// Check first two points first
+	Expression p1 = dataList[0];
+	Expression p2 = dataList[1];
+
+	// Each Data entry must a List of 2 Numbers or error
+	if ( p1.isHeadList() && (p1.asList().size() == 2)
+		&& p2.isHeadList() && (p2.asList().size() == 2) )
+	{
+		List temp1 = p1.asList(); List temp2 = p2.asList();
+		if ( temp1[0].isHeadNumber() && temp1[1].isHeadNumber()
+			&& temp1[0].isHeadNumber() && temp1[1].isHeadNumber() )
+		{
+			double x1 = temp1[0].head().asNumber();
+			double y1 = temp1[1].head().asNumber();
+			
+			double x2 = temp2[0].head().asNumber();
+			double y2 = temp2[1].head().asNumber();
+
+			// Assign initial data bounding box values for comparison
+			xMax = std::max(x1, x2);	yMax = std::max(y1, y2);
+			xMin = std::min(x1, x2);	yMin = std::min(y1, y2);
+		}
+		else { throw SemanticError("Error: invalid Data points"); }
+	}
+	else { throw SemanticError("Error: invalid Data points"); }
+	
+
+	// Can now safely check any and all remaining points in data list
+	for (auto exp : dataList) {
+		// Each Data entry must a List of 2 Numbers or error
+		if ( exp.isHeadList() && (exp.asList().size() == 2)
+			&& exp.asList()[0].isHeadNumber() && exp.asList()[1].isHeadNumber() )
+		{
+				//Keep track of the max and min x and y values
+				double thisX = exp.asList()[0].head().asNumber();
+				double thisY = exp.asList()[1].head().asNumber();
+				
+				xMax = std::max(xMax, thisX);		yMax = std::max(yMax, thisY);
+				xMin = std::max(xMin, thisX);		yMin = std::max(yMin, thisY);
+		}
+		else { throw SemanticError("Error: found invalid Data point"); }
+	}
+	
+	std::vector<double> data = { xMax, yMax, xMin, yMin };
+	//result = Expression(data);
+	
+	// Assign properties
+
+	//return result;
+	return data;
+}
+*/
+
+std::vector<Expression::Point> parseData(const Expression::List & dataList, LayoutParams & params){
+	
+	std::vector<Expression::Point> results;
+	
+	// Initialize extrema point data
+	double xMax = 0; double yMax = 0;
+	double xMin = 0; double yMin = 0;
+	
+	// Check first two points first
+	Expression p1 = dataList[0];
+	Expression p2 = dataList[1];
+
+	// Each Data entry must a List of 2 Numbers or error
+	if ( p1.isHeadList() && (p1.asList().size() == 2)
+		&& p2.isHeadList() && (p2.asList().size() == 2) )
+	{
+		Expression::List temp1 = p1.asList();
+		Expression::List temp2 = p2.asList();
+
+		if ( temp1[0].isHeadNumber() && temp1[1].isHeadNumber()
+			&& temp1[0].isHeadNumber() && temp1[1].isHeadNumber() )
+		{
+			double x1 = temp1[0].head().asNumber();
+			double y1 = temp1[1].head().asNumber();
+			
+			double x2 = temp2[0].head().asNumber();
+			double y2 = temp2[1].head().asNumber();
+
+			// Assign initial data bounding box values for comparison
+			xMax = std::max(x1, x2);	yMax = std::max(y1, y2);
+			xMin = std::min(x1, x2);	yMin = std::min(y1, y2);
+		}
+		else { throw SemanticError("Error: invalid Data points"); }
+	}
+	else { throw SemanticError("Error: invalid Data points"); }
+
+
+	// Can now safely check any and all remaining points in data list
+	for (auto exp : dataList) {
+		// Each Data entry must a List of 2 Numbers or error
+		if (exp.isHeadList() && (exp.asList().size() == 2)) {
+			if (exp.asList()[0].isHeadNumber() && exp.asList()[1].isHeadNumber()) {
+				/*--- Keep track of the max and min x and y values ---*/
+				double thisX = exp.asList()[0].head().asNumber();
+				double thisY = exp.asList()[1].head().asNumber();
+				
+				xMax = std::max(xMax, thisX);		yMax = std::max(yMax, thisY);
+				xMin = std::min(xMin, thisX);		yMin = std::min(yMin, thisY);
+				
+				Expression::Point point = std::make_pair(thisX, thisY);
+				
+				results.push_back(point);
+			}
+			else { throw SemanticError("Error: found invalid Data point"); }
+		}
+		else { throw SemanticError("Error: found invalid Data point"); }
+	}
+	
+	// Assign properties
+	params.xMax = xMax;		params.yMax = yMax;
+	params.xMin = xMin;		params.yMin = yMin;
+
+	return results;
+};
+
+Expression makePoint(double x, double y, double size){
+	
+	// Create Number Expression coordinates
+	Expression xVal = Expression(Atom(x));
+	Expression yVal = Expression(Atom(y));
+	Expression::List values = { xVal, yVal };
+
+	// Create a Point graphic item
+	Expression pointItem = Expression(values);
+	
+	// Set properties
+	Expression name = Expression(Atom("\"point\""));
+	pointItem.setProperty("\"object-name\"", name);
+
+	Expression s = Expression(Atom(size));
+	pointItem.setProperty("\"size\"", s);
+
+	return pointItem;
+};
+
+Expression makeLine(double x1, double y1, double x2, double y2, double thicc){
+	
+	// Create Point Expression items
+	Expression p1 = makePoint(x1, y1, 1);
+	Expression p2 = makePoint(x2, y2, 1);
+	Expression::List values = { p1, p2 };
+
+	// Create a Line graphic item
+	Expression lineItem = Expression(values);
+
+	// Set properties
+	Expression name = Expression(Atom("\"line\""));
+	lineItem.setProperty("\"object-name\"", name);
+
+	Expression t = Expression(Atom(thicc));
+	lineItem.setProperty("\"thickness\"", t);
+
+	return lineItem;
+};
+
+Expression::List makeBoundBox(LayoutParams & params){
+	
+	// Pull struct data into local variables
+	double xMax = params.xMax;	double yMax = params.yMax;
+	double xMin = params.xMin;	double yMin = params.yMin;
+	double xMid = params.xMid;	double yMid = params.yMid;
+	
+	// Top border Line: ( (xMin, yMax) (xMax, yMax) )
+	Expression topLine = makeLine(xMin, yMax, xMax, yMax, 0);
+
+	// Bottom border Line: ( (xMin, yMin) (xMax, yMin) )
+	Expression bottomLine = makeLine(xMin, yMin, xMax, yMin, 0);
+	
+	// Left border Line: ( (xMin, yMin) (xMin, yMax) )
+	Expression leftLine = makeLine(xMin, yMin, xMin, yMax, 0);
+	
+	// Right border Line: ( (xMax, yMin) (xMax, yMax) )
+	Expression rightLine = makeLine(xMax, yMin, xMax, yMax, 0);
+	
+	Expression::List results = { topLine, bottomLine, leftLine, rightLine };
+
+	// Draw X Axis?
+	if ( (yMin < 0) &&  (0 < yMax) ){
+		Expression xAxisLine = makeLine(xMin, yMid, xMax, yMid, 0);
+		results.push_back(xAxisLine);
+		params.xAxis = true;
+	}
+
+	// Draw Y Axis?
+	if ( (xMin < 0) && (0 < xMax) ){
+		Expression yAxisLine = makeLine(xMid, yMin, xMid, yMax, 0);
+		results.push_back(yAxisLine);
+		params.yAxis = true;
+	}
+
+	return results;
+};
+
+double getTextScale(const Expression::List & options){
+	
+	double txtScale = 1;	// Scaling factor for all Text
+
+	for (auto & option : options) {
+		// Each Options entry must be a List of 2 Expressions
+		if ( option.isHeadList() && (option.asList().size() == 2)
+			&& (option.asList()[0].isHeadString()) )
+		{
+				std::string name = option.asList()[0].asString();
+				Expression value = option.asList()[1];
+
+				if (name == "text-scale") {
+					// Must be a positive Number, defaults to 1
+					if (value.isHeadNumber() && (value.head().asNumber() > 0)) {
+						txtScale = value.head().asNumber();
+					}
+					else {
+						throw SemanticError("Error: invalid Option, text-scale must be positive");
+					}
+				}
+		}
+		else {
+			throw SemanticError("Error: found invalid Option");
+		}
+	}
+	return txtScale;
+};
+
+Expression makeText(const Expression::String & text, double x, double y, double s, double rotate){
+
+	// Need to add '\"' to make text a String literal
+	std::istringstream textStream(text);
+	std::ostringstream outStream;
+	outStream << "\"" << text << "\"";
+	std::string strHack = outStream.str();
+
+	Expression result = Expression(Atom(strHack));
+
+	// Convert input to radians
+	double deg = rotate;
+	double rad = deg * (std::atan2(0,-1)/180);
+	
+	Expression rotation = Expression(Atom(rad));
+	Expression name = Expression(Atom("\"text\""));
+	Expression scale = Expression(Atom(s));
+
+	result.setProperty("\"text-rotation\"", rotation);
+	result.setProperty("\"object-name\"", name);
+	result.setProperty("\"text-scale\"", scale);
+
+	// Make Text item's center-point
+	Expression xVal = Expression(Atom(x));
+	Expression yVal = Expression(Atom(y));
+
+	Expression::List data = { xVal, yVal };
+	Expression pointItem = Expression(data);
+
+	pointItem.setProperty("\"object-name\"", Expression(Atom("\"point\"")));
+
+	result.setProperty("\"position\"", pointItem);
+
+	return result;
+};
+
+Expression::List processOptions(const Expression::List & options, const LayoutParams & params){
+	
+	Expression::List results;
+
+	for (auto & option : options) {
+		// Each Options tag must be a List of 2 Expressions, the first being a String
+		if ( option.isHeadList() && (option.asList().size() == 2)
+			&& (option.asList()[0].isHeadString()) )
+		{
+			// Separate tag arguments into easily testable values
+			std::string tagName = option.asList()[0].asString();
+			Expression tagValue = option.asList()[1];
+
+			// Check which(if any) plotting option to assign
+			if ( (tagName == "title") && (tagValue.isHeadString()) ) {
+				// Make a new Text graphic item horizontally centered at the top
+				double x = params.xMid;
+				double y = params.yMax + params.A;
+				Expression item = makeText(tagValue.asString(), x, y, params.txtScale, 0);
+				results.push_back(item);
+			}
+			else if ( (tagName == "abscissa-label") && (tagValue.isHeadString()) ) {
+				// Make a new Text graphic item horizontally centered at the bottom
+				double x = params.xMid;
+				double y = params.yMin - params.A;
+				Expression item = makeText(tagValue.asString(), x, y, params.txtScale, 0);
+				results.push_back(item);
+			}
+			else if ( (tagName == "ordinate-label") && (tagValue.isHeadString()) ) {
+				// Make a new Text graphic item vertically centered on the left
+				double x = params.xMin - params.B;
+				double y = params.yMid;
+				Expression item = makeText(tagValue.asString(), x, y, params.txtScale, -90);
+				results.push_back(item);
+			}
+			// end if
+		}
+		else {
+			throw SemanticError("Error: invalid Option arguments");
+		}
+	} 
+	// end for
+	return results;
+};
+
+Expression::List makeTickLabels(const LayoutParams & params){
+
+	// Pull struct data into local variables
+	double xMax = params.xMax;	double yMax = params.yMax;
+	double xMin = params.xMin;	double yMin = params.yMin;
+	double xOff = params.D;			double yOff = params.C;
+	
+	double scale = params.txtScale;
+	
+	std::ostringstream outStream;
+	outStream << "\"" << std::setprecision(2) << xMax << "\"";
+	std::string xTop = outStream.str();
+	
+	outStream << "\"" << std::setprecision(2) << xMin << "\"";
+	std::string xBot = outStream.str();
+	
+	outStream << "\"" << std::setprecision(2) << yMax << "\"";
+	std::string yRight = outStream.str();
+	
+	outStream << "\"" << std::setprecision(2) << yMin << "\"";
+	std::string yLeft = outStream.str();
+
+	Expression xTopLabel = makeText(xTop, xMin - xOff, yMax, scale, 0.0);
+	Expression xBottomLabel = makeText(xBot, xMin - xOff, yMin, scale, 0.0);
+	
+	Expression yRightLabel = makeText(yRight, xMax, yMin - yOff, scale, 0.0);
+	Expression yLeftLabel = makeText(yLeft, xMin, yMin - yOff, scale, 0.0);
+
+	Expression::List results = { xTopLabel, xBottomLabel, yLeftLabel, yRightLabel };
+
+	return results;
+};
+
+/*
+struct LayoutParams {
+  
+	double N = 20;		// Scale for the N x N bounding rect
+	double A = 3;			// Vertical offset distance for title and axes labels
+	double B = 3;			// Horizontal offset distance for title and axes labels
+	double C = 2;			// Vertical offset distance for tick labels
+	double D = 2;			// Horizontal offset distance for tick labels
+	double P = 0.5;		// Size of points
+	
+	double xMax; double yMax;
+	double xMin; double yMin;
+	double xMid; double yMid;
+	
+	double txtScale;
+};
+*/
+Expression::List Expression::makeDiscretePlot(const List & data, const List & options){
+
+	List results;
+	LayoutParams params;
+
+	/*--- Read and Process each Data List Entry ---*/
+	std::vector<Point> points = parseData(data, params);
+	
+	LayoutParams outParams;
+	
+	/*--- Calculate Scaled Values ---*/
+	double width = std::abs(params.xMax - params.xMin);
+	double height = std::abs(params.yMax - params.yMin);
+	
+	if( (width == 0) || (height == 0) ){
+		throw SemanticError("Error: invalid Data");
+	}
+	
+	/*--- Apply Scaling Factor ---*/
+	double scaleX = (params.N / width);
+	double scaleY = (params.N / height); // Fixes the inverted y-axis of Q?
+	
+	outParams.xMin = scaleX * params.xMin;
+	outParams.xMax = scaleX * params.xMax;
+	outParams.yMin = scaleY * params.yMin;
+	outParams.yMax = scaleY * params.yMax;
+	outParams.xMid = (params.xMax + params.xMin) / 2;
+	outParams.yMid = (params.yMax + params.yMin) / 2;
+
+	/*--- Analyze and Setup Graphical Layout Data ---*/
+	List box = makeBoundBox(outParams);
+	for (auto & item : box) {
+		results.push_back(item);
+	}
+
+	/*--- Create Stem Plot Points ---*/
+	for (auto & point : points) {
+		
+		// Scale each old point to make new point
+		double thisX = point.first  * scaleX;
+		double thisY = point.second * scaleY;
+		
+		// Create and add a Point graphic item to result, along with extension line
+		Expression pointItem = makePoint(thisX, thisY, outParams.P);
+		
+		// Check which direction to draw extension lines
+		Expression stemItem;
+		
+		if(outParams.xAxis){
+			// Draw line from point to axis
+			stemItem = makeLine(thisX, thisY, thisX, 0.0, 0.0);
+		}
+		else if(outParams.yMax > 0){
+			// Draw line from point to top box edge
+			stemItem = makeLine(thisX, thisY, thisX, outParams.yMax, 0.0);
+		}
+		else if(outParams.yMin < 0){
+			// Draw line from point to bottom box edge
+			stemItem = makeLine(thisX, thisY, thisX, outParams.yMin, 0.0);
+		}
+		
+		results.push_back(pointItem);
+		results.push_back(stemItem);
+	}
+
+	/*--- Get Text Scaling Factor ---*/
+	outParams.txtScale = getTextScale(options); // Scaling factor for all Text
+
+	/*--- Use Options List to Make Text Labels ---*/
+	List optionsResult = processOptions(options, outParams);
+	for (auto & item : optionsResult) {
+		results.push_back(item);
+	}
+
+	/*--- Make the Tick Mark Text Labels ---*/
+	List labels = makeTickLabels(outParams);
+	for (auto & item : labels) {
+		results.push_back(item);
+	}
+	
+	return results;
+}
+
 /***********************************************************************
 Private Methods
 **********************************************************************/
@@ -400,7 +859,7 @@ Expression Expression::handle_apply(Environment & env){
   List args = m_tail[1].asList();
   
   // Set up restructured AST in form: (<procedure> <arg list>)
-  Expression result(proc);
+  Expression result = Expression(proc);
   result.m_tail = args;
   
   // Evaluate result of applied procedure

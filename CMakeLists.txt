@@ -35,7 +35,8 @@ set(unittest_src
 # EDIT
 # add source for any TUI modules here
 set(tui_src
-  )
+ layout_parameters.h
+)
 
 # EDIT
 # add source for any GUI modules here

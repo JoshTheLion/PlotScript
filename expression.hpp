@@ -6,6 +6,7 @@ Defines the Expression type and assiciated functions.
 
 #include "token.hpp"
 #include "atom.hpp"
+#include "layout_parameters.h"
 
 #include <vector>
 #include <string>
@@ -28,6 +29,7 @@ public:
   typedef std::string String;
   typedef std::vector<Expression> List;
   typedef std::pair<List, Expression> Lambda;
+	typedef std::pair<double, double> Point;
   
   // convenience typedef
   typedef std::vector<Expression>::const_iterator ConstIteratorType;
@@ -114,6 +116,9 @@ public:
 
   /// convienience member to determine if Expression is a Graphic Primitive Text
   bool isTextG() const noexcept;
+
+	// Convenient helper method for built-in procedure equivalent
+	static List makeDiscretePlot(const List & data, const List & options);
 
   /// Evaluate expression using a post-order traversal (recursive)
   Expression eval(Environment & env);

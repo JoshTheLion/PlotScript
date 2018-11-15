@@ -599,6 +599,39 @@ Expression make_range(const std::vector<Expression> & args)
 	return Expression(results);
 };
 
+/*
+ * (apply <procedure> <list>)
+ * The built-in binary procedure apply has two arguments. The first argument
+ * is a procedure, the second a list. It treats the elements of the list
+ * as the arguments to the procedure, returning the result after evaluation.
+ */
+Expression apply(const std::vector<Expression> & args)
+{
+	//stub
+	std::vector<Expression> results;
+
+
+
+
+	return Expression(results);
+};
+
+/*
+ * (map <procedure> <list>)
+ * The built-in binary procedure map is similar to apply, but treats each
+ * entry of the list as a separate argument to the procedure, returning a
+ * list of the same size of results.
+ */
+Expression map(const std::vector<Expression> & args)
+{
+	//stub
+	std::vector<Expression> results;
+
+
+
+
+	return Expression(results);
+};
 
 
 /*
@@ -632,89 +665,14 @@ Expression discrete_plot(const std::vector<Expression> & args)
 			Expression::List data = args[0].asList();
 			Expression::List options = args[1].asList();
 			
-			/*--- Declare Default Layout Parameters ---*/
-			double N = 20;		// Scale for the N x N bounding rect
-			double A = 3;			// Vertical offset distance for title and axes labels
-			double B = 3;			// Horizontal offset distance for title and axes labels
-			double C = 2;			// Vertical offset distance for tick labels
-			double D = 2;			// Horizontal offset distance for tick labels
-			double P = 0.5;		// Size of points
-			double txtScale = 1;	// Scaling factor for all Text
-
-			/*--- Read and process each Data List entry ---*/
-			for(auto & point : data){
-				// Each Data entry must a List of 2 Numbers or error
-				if(point.isHeadList() && (point.asList().size() == 2)){
-					if(point.asList()[0].isHeadNumber() && point.asList()[1].isHeadNumber()){
-						
-						/*--- Keep track of the max and min x and y values ---*/
-
-						// Create and add a Point graphic item to result
-						Expression item = make_list(point.asList());
-						item.setProperty("\"object-name\"", Expression(Atom("\"point\"")));
-						item.setProperty("\"size\"", Expression(Atom(P)));
-						result.push_back(item);
-					}
-					else{
-						throw SemanticError("Error: found invalid Data point");
-					}
-				}
-				else{
-					throw SemanticError("Error: found invalid Data point");
-				}
+			try {
+				Expression::List temp = Expression::makeDiscretePlot(data, options);
+				result = temp;
 			}
-			
-			/*--- Setup graphical layout data ---*/
-			// Make some sort of function for this
-
-			/*--- Read and process each Options List entry ---*/
-			for(auto & option : options){
-				// Each Options entry must a List of 2 Expressions
-				if(option.isHeadList() && (option.asList().size() == 2)){
-					if(option.asList()[0].isHeadString()){
-						
-						std::string name = option.asList()[0].asString();
-						Expression value = option.asList()[1];
-						
-						// Check which(if any) plotting option to assign
-						if(name == "title"){
-							// Title value must be a String
-							if(value.isHeadString()){
-								// Create and add a Text graphic item to result
-								Expression item(value);
-								item.setProperty("\"object-name\"", Expression(Atom("\"text\"")));
-								item.setProperty("\"text-scale\"", Expression(Atom(txtScale)));
-								// Set location properties
-
-								result.push_back(item);
-							}
-						}
-						else if(name == "abscissa-label"){
-							// stub
-						}
-						else if(name == "ordinate-label"){
-							// stub
-						}
-						else if(name == "text-scale"){
-							// Must be a positive Number, defaults to 1
-							if(value.isHeadNumber() && (value.head().asNumber() > 0)){
-								txtScale = value.head().asNumber();
-							}
-						}
-						else{
-							throw SemanticError("Error: found invalid Option");
-						}
-						// end selection
-					}
-					else{
-						throw SemanticError("Error: found invalid Option");
-					}
-				}
-				else{
-					throw SemanticError("Error: found invalid Option");
-				}
-			} // end for
-
+			catch (const SemanticError & ex) {
+				throw ex; // Re-throw error? Idk if this helps or not
+				return EXIT_FAILURE;
+			}
 		}
 		else{
 			throw SemanticError("Error: an argument to discrete-plot is not a list");
