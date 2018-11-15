@@ -298,7 +298,7 @@ std::vector<Expression::Point> parseData(const Expression::List & dataList, Layo
 		Expression::List temp2 = p2.asList();
 
 		if ( temp1[0].isHeadNumber() && temp1[1].isHeadNumber()
-			&& temp1[0].isHeadNumber() && temp1[1].isHeadNumber() )
+			&& temp2[0].isHeadNumber() && temp2[1].isHeadNumber() )
 		{
 			double x1 = temp1[0].head().asNumber();
 			double y1 = temp1[1].head().asNumber();
@@ -316,7 +316,7 @@ std::vector<Expression::Point> parseData(const Expression::List & dataList, Layo
 
 
 	// Can now safely check any and all remaining points in data list
-	for (auto exp : dataList) {
+	for (auto & exp : dataList) {
 		// Each Data entry must a List of 2 Numbers or error
 		if (exp.isHeadList() && (exp.asList().size() == 2)) {
 			if (exp.asList()[0].isHeadNumber() && exp.asList()[1].isHeadNumber()) {
@@ -388,7 +388,7 @@ Expression::List makeBoundBox(LayoutParams & params){
 	// Pull struct data into local variables
 	double xMax = params.xMax;	double yMax = params.yMax;
 	double xMin = params.xMin;	double yMin = params.yMin;
-	double xMid = params.xMid;	double yMid = params.yMid;
+	//double xMid = params.xMid;	double yMid = params.yMid;
 	
 	// Top border Line: ( (xMin, yMax) (xMax, yMax) )
 	Expression topLine = makeLine(xMin, yMax, xMax, yMax, 0);
@@ -405,15 +405,15 @@ Expression::List makeBoundBox(LayoutParams & params){
 	Expression::List results = { topLine, bottomLine, leftLine, rightLine };
 
 	// Draw X Axis?
-	if ( (yMin < 0) &&  (0 < yMax) ){
-		Expression xAxisLine = makeLine(xMin, yMid, xMax, yMid, 0);
+	if ( (yMin < 0) && (0 < yMax) ){
+		Expression xAxisLine = makeLine(xMin, 0, xMax, 0, 0);
 		results.push_back(xAxisLine);
 		params.xAxis = true;
 	}
 
 	// Draw Y Axis?
 	if ( (xMin < 0) && (0 < xMax) ){
-		Expression yAxisLine = makeLine(xMid, yMin, xMid, yMax, 0);
+		Expression yAxisLine = makeLine(0, yMin, 0, yMax, 0);
 		results.push_back(yAxisLine);
 		params.yAxis = true;
 	}
@@ -531,27 +531,31 @@ Expression::List processOptions(const Expression::List & options, const LayoutPa
 	return results;
 };
 
-Expression::List makeTickLabels(const LayoutParams & params){
+Expression::List makeTickLabels(const LayoutParams & oldParams, const LayoutParams & newParams){
 
 	// Pull struct data into local variables
-	double xMax = params.xMax;	double yMax = params.yMax;
-	double xMin = params.xMin;	double yMin = params.yMin;
-	double xOff = params.D;			double yOff = params.C;
+	double xMax = newParams.xMax;	double yMax = newParams.yMax;
+	double xMin = newParams.xMin;	double yMin = newParams.yMin;
+	double xOff = newParams.D;		double yOff = newParams.C;
 	
-	double scale = params.txtScale;
+	double scale = newParams.txtScale;
 	
-	std::ostringstream outStream;
-	outStream << "\"" << std::setprecision(2) << xMax << "\"";
-	std::string xTop = outStream.str();
+	// Label values should be unscaled input values, but use scaled values for placing
+	std::ostringstream outStream1;
+	outStream1 << std::setprecision(2) << oldParams.xMax;
+	std::string xTop = outStream1.str();
 	
-	outStream << "\"" << std::setprecision(2) << xMin << "\"";
-	std::string xBot = outStream.str();
+	std::ostringstream outStream2;
+	outStream2 << std::setprecision(2) << oldParams.xMin;
+	std::string xBot = outStream2.str();
 	
-	outStream << "\"" << std::setprecision(2) << yMax << "\"";
-	std::string yRight = outStream.str();
+	std::ostringstream outStream3;
+	outStream3 << std::setprecision(2) << oldParams.yMax;
+	std::string yRight = outStream3.str();
 	
-	outStream << "\"" << std::setprecision(2) << yMin << "\"";
-	std::string yLeft = outStream.str();
+	std::ostringstream outStream4;
+	outStream4 << std::setprecision(2) << oldParams.yMin;
+	std::string yLeft = outStream4.str();
 
 	Expression xTopLabel = makeText(xTop, xMin - xOff, yMax, scale, 0.0);
 	Expression xBottomLabel = makeText(xBot, xMin - xOff, yMin, scale, 0.0);
@@ -656,7 +660,7 @@ Expression::List Expression::makeDiscretePlot(const List & data, const List & op
 	}
 
 	/*--- Make the Tick Mark Text Labels ---*/
-	List labels = makeTickLabels(outParams);
+	List labels = makeTickLabels(params, outParams);
 	for (auto & item : labels) {
 		results.push_back(item);
 	}

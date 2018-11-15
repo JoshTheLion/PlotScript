@@ -604,7 +604,7 @@ Expression make_range(const std::vector<Expression> & args)
  * The built-in binary procedure apply has two arguments. The first argument
  * is a procedure, the second a list. It treats the elements of the list
  * as the arguments to the procedure, returning the result after evaluation.
- */
+
 Expression apply(const std::vector<Expression> & args)
 {
 	//stub
@@ -615,13 +615,14 @@ Expression apply(const std::vector<Expression> & args)
 
 	return Expression(results);
 };
+ */
 
 /*
  * (map <procedure> <list>)
  * The built-in binary procedure map is similar to apply, but treats each
  * entry of the list as a separate argument to the procedure, returning a
  * list of the same size of results.
- */
+
 Expression map(const std::vector<Expression> & args)
 {
 	//stub
@@ -632,7 +633,7 @@ Expression map(const std::vector<Expression> & args)
 
 	return Expression(results);
 };
-
+ */
 
 /*
  * (discrete-plot DATA OPTIONS)
@@ -671,7 +672,7 @@ Expression discrete_plot(const std::vector<Expression> & args)
 			}
 			catch (const SemanticError & ex) {
 				throw ex; // Re-throw error? Idk if this helps or not
-				return EXIT_FAILURE;
+				//return EXIT_FAILURE;
 			}
 		}
 		else{

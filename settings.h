@@ -23,9 +23,9 @@ struct Settings {
   double scale; // used when type is Text_Type
   double rotate;// used when type is Text_Type
   double size;  // used when type is Point_Type
-  double thicc; // used when type is Line_Type
-  QPoint p1;
-  QPoint p2;
+  QPoint p1;		// used when type is Line_Type
+  QPoint p2;		// used when type is Line_Type
+	double thicc; // used when type is Line_Type
 
   // constructors for use in assignment, signal, and output
   Settings() {};

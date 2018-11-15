@@ -51,7 +51,7 @@ void OutputWidget::getResult(Settings result){
   m_item = nullptr;
   
   // Draw cosmetic lines at scene origin for visual reference
-  //drawCrosshairs();
+  drawCrosshairs();
 
   // Display new graphic item
   if(result.itemType != Settings::Type::None_Type){
@@ -173,14 +173,17 @@ void OutputWidget::drawCrosshairs(){
   
   QPen p;
   p.setWidth(0);
+	
+	double scale = 1;
 
-  m_scene->addLine(QLineF(QPoint(-10, 0), QPoint(10, 0)), p);
-  m_scene->addLine(QLineF(QPoint( 0,-10), QPoint(0, 10)), p);
+  m_scene->addLine(QLineF(QPoint(-1 * scale, 0), QPoint(1 * scale, 0)), p);
+  m_scene->addLine(QLineF(QPoint( 0, -1 * scale), QPoint(0, 1 * scale)), p);
 }
 
 void OutputWidget::resizeEvent(QResizeEvent * event){
-  
+	
   // Automatically re-focus the view when widget is resized
   m_view->fitInView(m_scene->itemsBoundingRect(), Qt::KeepAspectRatio);
+	event->accept();
 }
 
