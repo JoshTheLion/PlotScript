@@ -62,6 +62,9 @@ public:
 
   /// append Atom to tail of the expression
   void append(const Atom & a);
+	
+	/// append Atom to tail of the expression
+	void append(const Expression & e);
 
   /// return a pointer to the last expression in the tail, or nullptr
   Expression * tail();

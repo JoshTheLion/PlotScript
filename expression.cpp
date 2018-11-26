@@ -3,6 +3,7 @@
 #include "semantic_error.hpp"
 
 #include <sstream>
+#include <iostream>
 #include <iomanip>
 #include <list>
 #include <vector>
@@ -47,11 +48,16 @@ Expression & Expression::operator=(const Expression & a){
   // prevent self-assignment
   if(this != &a){
     m_head = a.m_head;
-    m_props = a.m_props;
-    m_tail.clear();
+    
+		m_tail.clear();
     for(auto e : a.m_tail){
       m_tail.push_back(e);
     }
+		
+		m_props.clear();
+		for (auto p : a.m_props) {
+			m_props.emplace(p);
+		}
   }
   
   return *this;
@@ -65,8 +71,13 @@ Atom & Expression::head(){
 const Atom & Expression::head() const{
   return m_head;
 }
+
 void Expression::append(const Atom & a){
   m_tail.emplace_back(a);
+}
+
+void Expression::append(const Expression & e){
+	m_tail.push_back(e);
 }
 
 Expression * Expression::tail(){
@@ -689,10 +700,10 @@ Expression Expression::apply(const Atom & op, const List & args, const Environme
   }
   else if(env.is_anon_proc(op)){
     // Get the function the symbol maps to
-	Expression mappedExp = env.get_exp(op);
+		Expression mappedExp = env.get_exp(op);
 
-	// Evaluate function with args
-	return call_lambda(mappedExp, args, env);
+		// Evaluate function with args
+		return call_lambda(mappedExp, args, env);
   }
   else{
     throw SemanticError("Error during evaluation: symbol does not name a procedure");
@@ -762,8 +773,8 @@ Expression Expression::handle_define(Environment & env){
     throw SemanticError("Error during evaluation: attempt to redefine a special-form");
   }
   
-  if((env.is_proc(m_head)) || (s == "apply") || (s == "map")
-      /*|| (s == "set-property") || (s == "get-property")*/)
+  if( (env.is_proc(m_head)) || (s == "apply") || (s == "map")
+      || (s == "set-property") || (s == "get-property") )
   {
     throw SemanticError("Error during evaluation: attempt to redefine a built-in procedure");
   }
@@ -810,12 +821,12 @@ Expression Expression::handle_lambda() {
 
   for(auto exp : m_tail[0].m_tail) {
     // Check each parameter is a symbol
-	if(exp.head().isSymbol()){
-	  params.push_back(exp);
-	}
-	else {
-	  throw SemanticError("Error during evaluation: an argument to lambda is invalid");
-	}
+		if(exp.head().isSymbol()){
+			params.push_back(exp);
+		}
+		else {
+			throw SemanticError("Error during evaluation: an argument to lambda is invalid");
+		}
   }
   
   // Store tail[1] Expression for procedure
@@ -848,23 +859,24 @@ Expression Expression::handle_apply(Environment & env){
   std::string s = proc.asSymbol();
 
   // tail[0] must be a built-in or user-defined procedure
-  if( !(env.is_proc(proc) || env.is_anon_proc(proc) || (s == "apply") || (s == "map")
-      || (s == "set-property") || (s == "get-property")) )
+  if( !( env.is_proc(proc) || env.is_anon_proc(proc) || (s == "apply") || (s == "map")
+				|| (s == "set-property") || (s == "get-property") ) )
   {
     throw SemanticError("Error during evaluation: first argument in call to apply is not a Procedure");
   }
 
-  // tail[1] must be a List of arguments
-  if(!m_tail[1].isHeadList()){
+  // tail[1] must evaluate to a List of arguments
+	Expression argsEvaled = m_tail[1].eval(env);
+	if(!argsEvaled.isHeadList()){
     throw SemanticError("Error during evaluation: second argument in call to apply is not a List");
   }
   
   // Extract second piece of apply function
-  List args = m_tail[1].asList();
+  List argsList = argsEvaled.asList();
   
-  // Set up restructured AST in form: (<procedure> <arg list>)
+  // Set up restructured AST in form: (<procedure> <argument> <argument> ...)
   Expression result = Expression(proc);
-  result.m_tail = args;
+  result.m_tail = argsList;
   
   // Evaluate result of applied procedure
   return result.eval(env);
@@ -884,44 +896,52 @@ Expression Expression::handle_map(Environment & env){
   }
   
   // tail[0] must be a symbol
-  if( !(m_tail[0].isHeadSymbol() && m_tail[0].isTailEmpty()) ){
+  if( !( m_tail[0].isHeadSymbol() && m_tail[0].isTailEmpty() ) ){
     throw SemanticError("Error during evaluation: first argument in call to map is not a Symbol");
   }
   
   // Extract first piece of map function
-  Atom proc = m_tail[0].head();
-  std::string s = proc.asSymbol();
+  Atom sym = m_tail[0].head();
+  std::string s = sym.asSymbol();
 
   // tail[0] must be a built-in or user-defined procedure
-  if( !(env.is_proc(proc) || env.is_anon_proc(proc) || (s == "apply") || (s == "map")
+  if( !(env.is_proc(sym) || env.is_anon_proc(sym) || (s == "apply") || (s == "map")
       || (s == "set-property") || (s == "get-property")) )
   {
     throw SemanticError("Error during evaluation: first argument to map is not a Procedure");
   }
 
-  // tail[1] must be a List of arguments
-  if(!m_tail[1].isHeadList()){
+  // tail[1] must evaluate to a List of arguments
+	Expression argsEvaled = m_tail[1].eval(env);
+	if(!argsEvaled.isHeadList()){
     throw SemanticError("Error during evaluation: second argument to map is not a List");
   }
   
   // Extract second piece of map function
-  List args = m_tail[1].asList();
+  List argsIn = argsEvaled.asList();
 
   // Set up restructured AST in form: (list <expression> <expression> ...)
-  Expression result(Atom("list"));
+  Expression results(Atom("list"));
 
-  // Apply the procedure to each argument
-  for(auto & exp : args){
-    // Create a new Expression in form: (<procedure> <argument>)
-    Expression argApply(proc);
-    argApply.m_tail = {exp};
-    
-    // Add it to the AST
-    result.m_tail.push_back(argApply);
+  // Apply the Procedure to each entry in the argument List
+  for(auto & argument : argsIn){
+		
+		// Create a new Expression entry in form:
+		//(apply <procedure> (list <argument> <argument> ...))
+		Expression entryExp(Atom("apply"));
+		Expression procedure(sym);
+		
+		// Put the entry in List form required for apply
+		Expression entryArgs(Atom("list"));
+		entryArgs.m_tail = { argument };
+
+    // Complete entry and add it to the AST
+		entryExp.m_tail = { procedure, entryArgs };
+		results.m_tail.push_back(entryExp);
   }
-  
+
   // Evaluate modified AST and return result
-  return result.eval(env);
+  return results.eval(env);
 }
 
 /*
@@ -1054,9 +1074,9 @@ Expression Expression::call_lambda(Expression & lambda, const List & args, const
 	Expression function = lambda.m_tail[1];
 
 	// Function call must match number of defined arguments or error
-    if(params.size() != argsIn.size()) {
+  if(params.size() != argsIn.size()) {
 		throw SemanticError("Error during evaluation: invalid number of arguments to call lambda function");
-    }
+  }
 
 	// Copy construct a new temporary Environment for Lambda evaluation
 	Environment shadowEnv(env);
