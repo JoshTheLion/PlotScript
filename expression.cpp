@@ -579,23 +579,7 @@ Expression::List makeTickLabels(const LayoutParams & oldParams, const LayoutPara
 	return results;
 };
 
-/*
-struct LayoutParams {
-  
-	double N = 20;		// Scale for the N x N bounding rect
-	double A = 3;			// Vertical offset distance for title and axes labels
-	double B = 3;			// Horizontal offset distance for title and axes labels
-	double C = 2;			// Vertical offset distance for tick labels
-	double D = 2;			// Horizontal offset distance for tick labels
-	double P = 0.5;		// Size of points
-	
-	double xMax; double yMax;
-	double xMin; double yMin;
-	double xMid; double yMid;
-	
-	double txtScale;
-};
-*/
+
 Expression::List Expression::makeDiscretePlot(const List & data, const List & options){
 
 	List results;
@@ -617,8 +601,18 @@ Expression::List Expression::makeDiscretePlot(const List & data, const List & op
 	
 	/*---  Scaling Factor for (N x N) Box ---*/
 	double scaleX =  (params.N / dataWidth);
-	double scaleY =  (params.N / dataHeight); // Fixes the inverted y-axis of QGraphicsView?
+	double scaleY =  (params.N / dataHeight);
 	
+	///////////////////////////////////////////////////////////////////////////////
+	// Design Note:
+	// Compensating for the inverted y-axis of the QGraphicsScene coordinate system
+	// was more frustrating than I expected.
+	// I chose not to negate the scale here and apply it to everything, because while
+	// it makes sense on paper, I realized it would've made all my calculations and
+	// positioning logic unnecessarily complicated and highly prone to sign errors.
+	// It was much easier to just negate the final y-coordinate values after all
+	// calculations, when creating each object's output Expression.
+
 	double boxWidth = std::abs(scaleX * dataWidth);
 	double boxHeight = std::abs(scaleY * dataHeight);
 	
@@ -649,23 +643,22 @@ Expression::List Expression::makeDiscretePlot(const List & data, const List & op
 		
 		// Scale each old point to make new point
 		double thisX =  (scaleX * point.first);
-		double thisY =  (scaleY * point.second); // Fixes the inverted y-axis of QGraphicsView?
+		double thisY =  (scaleY * point.second); // Negate during final point creation
 		
 		// Create and add a Point graphic item to result, along with extension line
 		Expression pointItem = makePoint(thisX, -thisY, outParams.P);
-		
-		// Check which direction to draw extension lines
 		Expression stemItem;
 		
-		if(outParams.xAxis){
+		// Check which direction to draw extension lines
+		if(outParams.xAxis){ // (yMin < 0.0 < yMax)
 			// Draw line from point to axis
 			stemItem = makeLine(thisX, -thisY, thisX, 0.0, 0.0);
 		}
-		else if(outParams.yMax < 0.0){ // (yMin < 0.0) && (yMax > 0.0)
+		else if(outParams.yMax <= 0.0){
 			// Draw line from point to top box edge
 			stemItem = makeLine(thisX, -thisY, thisX, -outParams.yMax, 0.0);
 		}
-		else if(outParams.yMin > 0.0){
+		else if(outParams.yMin >= 0.0){
 			// Draw line from point to bottom box edge
 			stemItem = makeLine(thisX, -thisY, thisX, -outParams.yMin, 0.0);
 		}
