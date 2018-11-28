@@ -294,8 +294,8 @@ std::vector<Expression::Point> parseData(const Expression::List & dataList, Layo
 	std::vector<Expression::Point> results;
 	
 	// Initialize extrema point data
-	double xMax = 0; double yMax = 0;
-	double xMin = 0; double yMin = 0;
+	double xMax = 0.0; double yMax = 0.0;
+	double xMin = 0.0; double yMin = 0.0;
 	
 	// Check first two points first
 	Expression p1 = dataList[0];
@@ -377,8 +377,8 @@ Expression makePoint(double x, double y, double size){
 Expression makeLine(double x1, double y1, double x2, double y2, double thicc){
 	
 	// Create Point Expression items
-	Expression p1 = makePoint(x1, y1, 1);
-	Expression p2 = makePoint(x2, y2, 1);
+	Expression p1 = makePoint(x1, y1, 1.0);
+	Expression p2 = makePoint(x2, y2, 1.0);
 	Expression::List values = { p1, p2 };
 
 	// Create a Line graphic item
@@ -402,29 +402,29 @@ Expression::List makeBoundBox(LayoutParams & params){
 	//double xMid = params.xMid;	double yMid = params.yMid;
 	
 	// Top border Line: ( (xMin, yMax) (xMax, yMax) )
-	Expression topLine = makeLine(xMin, yMax, xMax, yMax, 0);
+	Expression topLine = makeLine(   xMin, -yMax, xMax, -yMax, 0.0);
 
 	// Bottom border Line: ( (xMin, yMin) (xMax, yMin) )
-	Expression bottomLine = makeLine(xMin, yMin, xMax, yMin, 0);
+	Expression bottomLine = makeLine(xMin, -yMin, xMax, -yMin, 0.0);
 	
 	// Left border Line: ( (xMin, yMin) (xMin, yMax) )
-	Expression leftLine = makeLine(xMin, yMin, xMin, yMax, 0);
+	Expression leftLine = makeLine(  xMin, -yMin, xMin, -yMax, 0.0);
 	
 	// Right border Line: ( (xMax, yMin) (xMax, yMax) )
-	Expression rightLine = makeLine(xMax, yMin, xMax, yMax, 0);
+	Expression rightLine = makeLine( xMax, -yMin, xMax, -yMax, 0.0);
 	
 	Expression::List results = { topLine, bottomLine, leftLine, rightLine };
 
 	// Draw X Axis?
-	if ( (yMin < 0) && (0 < yMax) ){
-		Expression xAxisLine = makeLine(xMin, 0, xMax, 0, 0);
+	if ( (yMin < 0.0) && (yMax > 0.0) ){
+		Expression xAxisLine = makeLine(xMin, 0.0, xMax, 0.0, 0.0);
 		results.push_back(xAxisLine);
 		params.xAxis = true;
 	}
 
 	// Draw Y Axis?
-	if ( (xMin < 0) && (0 < xMax) ){
-		Expression yAxisLine = makeLine(0, yMin, 0, yMax, 0);
+	if ( (xMin < 0.0) && (xMax > 0.0) ){
+		Expression yAxisLine = makeLine(0.0, -yMin, 0.0, -yMax, 0.0);
 		results.push_back(yAxisLine);
 		params.yAxis = true;
 	}
@@ -434,7 +434,7 @@ Expression::List makeBoundBox(LayoutParams & params){
 
 double getTextScale(const Expression::List & options){
 	
-	double txtScale = 1;	// Scaling factor for all Text
+	double txtScale = 1.0;	// Scaling factor for all Text
 
 	for (auto & option : options) {
 		// Each Options entry must be a List of 2 Expressions
@@ -446,7 +446,7 @@ double getTextScale(const Expression::List & options){
 
 				if (name == "text-scale") {
 					// Must be a positive Number, defaults to 1
-					if (value.isHeadNumber() && (value.head().asNumber() > 0)) {
+					if (value.isHeadNumber() && (value.head().asNumber() > 0.0)) {
 						txtScale = value.head().asNumber();
 					}
 					else {
@@ -473,7 +473,7 @@ Expression makeText(const Expression::String & text, double x, double y, double 
 
 	// Convert input to radians
 	double deg = rotate;
-	double rad = deg * (std::atan2(0,-1)/180);
+	double rad = deg * (std::atan2(0.0,-1.0) / 180.0);
 	
 	Expression rotation = Expression(Atom(rad));
 	Expression name = Expression(Atom("\"text\""));
@@ -515,21 +515,21 @@ Expression::List processOptions(const Expression::List & options, const LayoutPa
 				// Make a new Text graphic item horizontally centered at the top
 				double x = params.xMid;
 				double y = params.yMax + params.A;
-				Expression item = makeText(tagValue.asString(), x, y, params.txtScale, 0);
+				Expression item = makeText(tagValue.asString(), x, -y, params.txtScale, 0.0);
 				results.push_back(item);
 			}
 			else if ( (tagName == "abscissa-label") && (tagValue.isHeadString()) ) {
 				// Make a new Text graphic item horizontally centered at the bottom
 				double x = params.xMid;
 				double y = params.yMin - params.A;
-				Expression item = makeText(tagValue.asString(), x, y, params.txtScale, 0);
+				Expression item = makeText(tagValue.asString(), x, -y, params.txtScale, 0.0);
 				results.push_back(item);
 			}
 			else if ( (tagName == "ordinate-label") && (tagValue.isHeadString()) ) {
 				// Make a new Text graphic item vertically centered on the left
 				double x = params.xMin - params.B;
 				double y = params.yMid;
-				Expression item = makeText(tagValue.asString(), x, y, params.txtScale, -90);
+				Expression item = makeText(tagValue.asString(), x, -y, params.txtScale, -90.0);
 				results.push_back(item);
 			}
 			// end if
@@ -551,28 +551,28 @@ Expression::List makeTickLabels(const LayoutParams & oldParams, const LayoutPara
 	
 	double scale = newParams.txtScale;
 	
-	// Label values should be unscaled input values, but use scaled values for placing
+	// Label text should be unscaled input values, but use scaled values for placement
 	std::ostringstream outStream1;
-	outStream1 << std::setprecision(2) << oldParams.xMax;
+	outStream1 << std::setprecision(2) << oldParams.yMax;
 	std::string xTop = outStream1.str();
 	
 	std::ostringstream outStream2;
-	outStream2 << std::setprecision(2) << oldParams.xMin;
+	outStream2 << std::setprecision(2) << oldParams.yMin;
 	std::string xBot = outStream2.str();
 	
 	std::ostringstream outStream3;
-	outStream3 << std::setprecision(2) << oldParams.yMax;
+	outStream3 << std::setprecision(2) << oldParams.xMax;
 	std::string yRight = outStream3.str();
 	
 	std::ostringstream outStream4;
-	outStream4 << std::setprecision(2) << oldParams.yMin;
+	outStream4 << std::setprecision(2) << oldParams.xMin;
 	std::string yLeft = outStream4.str();
 
-	Expression xTopLabel = makeText(xTop, xMin - xOff, yMax, scale, 0.0);
-	Expression xBottomLabel = makeText(xBot, xMin - xOff, yMin, scale, 0.0);
+	Expression xTopLabel = makeText(   xTop, xMin - xOff, -yMax, scale, 0.0);
+	Expression xBottomLabel = makeText(xBot, xMin - xOff, -yMin, scale, 0.0);
 	
-	Expression yRightLabel = makeText(yRight, xMax, yMin - yOff, scale, 0.0);
-	Expression yLeftLabel = makeText(yLeft, xMin, yMin - yOff, scale, 0.0);
+	Expression yRightLabel = makeText(yRight, xMax, -(yMin - yOff), scale, 0.0);
+	Expression yLeftLabel = makeText( yLeft,  xMin, -(yMin - yOff), scale, 0.0);
 
 	Expression::List results = { xTopLabel, xBottomLabel, yLeftLabel, yRightLabel };
 
@@ -607,54 +607,67 @@ Expression::List Expression::makeDiscretePlot(const List & data, const List & op
 	LayoutParams outParams;
 	
 	/*--- Calculate Scaled Values ---*/
-	double width = std::abs(params.xMax - params.xMin);
-	double height = std::abs(params.yMax - params.yMin);
+	double dataWidth = std::abs(params.xMax - params.xMin);
+	double dataHeight = std::abs(params.yMax - params.yMin);
 	
-	if( (width == 0) || (height == 0) ){
-		throw SemanticError("Error: invalid Data");
+	// Precautionary check to prevent dividing by 0
+	if( (dataWidth == 0.0) || (dataHeight == 0.0) ){
+		throw SemanticError("Error: invalid input Data");
 	}
 	
-	/*--- Apply Scaling Factor ---*/
-	double scaleX = (params.N / width);
-	double scaleY = (params.N / height); // Fixes the inverted y-axis of Q?
+	/*---  Scaling Factor for (N x N) Box ---*/
+	double scaleX =  (params.N / dataWidth);
+	double scaleY =  (params.N / dataHeight); // Fixes the inverted y-axis of QGraphicsView?
 	
+	double boxWidth = std::abs(scaleX * dataWidth);
+	double boxHeight = std::abs(scaleY * dataHeight);
+	
+	// Precautionary check to prevent dividing by 0
+	if( (boxWidth == 0.0) || (boxHeight == 0.0) ){
+		throw SemanticError("Error: invalid output Data");
+	}
+
+	/*--- Set Plot Bounding Box Limits ---*/
 	outParams.xMin = scaleX * params.xMin;
 	outParams.xMax = scaleX * params.xMax;
+
 	outParams.yMin = scaleY * params.yMin;
 	outParams.yMax = scaleY * params.yMax;
-	outParams.xMid = (params.xMax + params.xMin) / 2;
-	outParams.yMid = (params.yMax + params.yMin) / 2;
-
-	/*--- Analyze and Setup Graphical Layout Data ---*/
+	
 	List box = makeBoundBox(outParams);
 	for (auto & item : box) {
 		results.push_back(item);
 	}
 
+	// Bounding box centers for label text
+	outParams.xMid = outParams.xMin + (boxWidth / 2);
+	outParams.yMid = outParams.yMin + (boxHeight / 2);
+
+
 	/*--- Create Stem Plot Points ---*/
 	for (auto & point : points) {
 		
 		// Scale each old point to make new point
-		double thisX = point.first  * scaleX;
-		double thisY = point.second * scaleY;
+		double thisX =  (scaleX * point.first);
+		double thisY =  (scaleY * point.second); // Fixes the inverted y-axis of QGraphicsView?
 		
 		// Create and add a Point graphic item to result, along with extension line
-		Expression pointItem = makePoint(thisX, thisY, outParams.P);
+		Expression pointItem = makePoint(thisX, -thisY, outParams.P);
 		
 		// Check which direction to draw extension lines
 		Expression stemItem;
 		
 		if(outParams.xAxis){
 			// Draw line from point to axis
-			stemItem = makeLine(thisX, thisY, thisX, 0.0, 0.0);
+			stemItem = makeLine(thisX, -thisY, thisX, 0.0, 0.0);
 		}
-		else if(outParams.yMax > 0){
+		else if(outParams.yMax < 0.0){ // (yMin < 0.0) && (yMax > 0.0)
 			// Draw line from point to top box edge
-			stemItem = makeLine(thisX, thisY, thisX, outParams.yMax, 0.0);
+			stemItem = makeLine(thisX, -thisY, thisX, -outParams.yMax, 0.0);
 		}
-		else if(outParams.yMin < 0){
+		else if(outParams.yMin > 0.0){
 			// Draw line from point to bottom box edge
-			stemItem = makeLine(thisX, thisY, thisX, outParams.yMin, 0.0);
+			stemItem = makeLine(thisX, -thisY, thisX, -outParams.yMin, 0.0);
 		}
 		
 		results.push_back(pointItem);
@@ -678,6 +691,7 @@ Expression::List Expression::makeDiscretePlot(const List & data, const List & op
 	
 	return results;
 }
+
 
 /***********************************************************************
 Private Methods

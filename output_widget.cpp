@@ -57,6 +57,9 @@ void OutputWidget::getResult(Settings result){
   if(result.itemType != Settings::Type::None_Type){
     drawItem(result);
   }
+
+	// Manually re-focus the view
+	m_view->fitInView(m_scene->itemsBoundingRect(), Qt::KeepAspectRatio);
 }
 
 void OutputWidget::drawItem(Settings data){
@@ -69,7 +72,12 @@ void OutputWidget::drawItem(Settings data){
   QPen pen;
   pen.setColor(Qt::black);
   pen.setBrush(Qt::SolidPattern);
-  
+	
+	// Setup specified font settings
+	auto font = QFont("Monospace");
+	font.setStyleHint(QFont::TypeWriter);
+	font.setPointSize(1);
+
   // Compiler forced me to declare these up here for some reason
   QRectF bRect;
   double dx;
@@ -80,14 +88,15 @@ void OutputWidget::drawItem(Settings data){
   switch (name) {
   case Settings::Type::TUI_Type:
 
-    m_item = m_scene->addText(data.text, QFont());
+    m_item = m_scene->addText(data.text, font);
 
     break;
 
   case Settings::Type::Text_Type:
     
     // Initialize Text item
-    m_item = m_scene->addText(data.text, QFont("Courier", 1, 1, false));
+    //m_item = m_scene->addText(data.text, QFont("Courier", 1, 1, false));
+		m_item = m_scene->addText(data.text, font);
     m_item->setScale(data.scale);
     
     // Translate item center-point to scene origin
@@ -165,16 +174,25 @@ void OutputWidget::drawItem(Settings data){
     qDebug() << "Invalid Item Type";
     break;
   }
-  // Manually re-focus the view
-  m_view->fitInView(m_scene->itemsBoundingRect(), Qt::KeepAspectRatio);
+  
 }
 
 void OutputWidget::drawCrosshairs(){
   
   QPen p;
   p.setWidth(0);
-	
+	p.setColor(Qt::black);
+	p.setBrush(Qt::SolidPattern);
+
 	double scale = 1;
+	double radius = 0.1;
+
+	// Initialize and center a bounding rect at the origin of its local item coordinates
+	QRectF bRect(0.0, 0.0, 2 * radius, 2 * radius);
+	bRect.moveCenter(QPointF(0.0, 0.0));
+
+	// Create an Ellipse bounded by the QRectF and add to scene
+	m_item = m_scene->addEllipse(bRect, p, p.brush());
 
   m_scene->addLine(QLineF(QPoint(-1 * scale, 0), QPoint(1 * scale, 0)), p);
   m_scene->addLine(QLineF(QPoint( 0, -1 * scale), QPoint(0, 1 * scale)), p);

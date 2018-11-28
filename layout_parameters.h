@@ -13,15 +13,15 @@ struct LayoutParams {
 	double D = 2;			// Horizontal offset distance for tick labels
 	double P = 0.5;		// Size of points
 
-	// Plot data bounding rectangle params
-	double xMax;				double yMax;
-	double xMin;				double yMin;
-	double xMid;				double yMid;
+	double txtScale;
+	double xMax, yMax;	// Ordinate limits
+	double xMin, yMin;	// Abscissa limits
+	double xMid, yMid;	// Box center for text labels
+	//double x0, y0;		// Maybe refactor in origin point location later
 
 	// Flags to track whether the X or Y Axis has been drawn
 	bool xAxis = false; bool yAxis = false;
-
-	double txtScale;
+	
 };
 
 
