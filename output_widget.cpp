@@ -72,6 +72,7 @@ void OutputWidget::drawItem(Settings data){
   QPen pen;
   pen.setColor(Qt::black);
   pen.setBrush(Qt::SolidPattern);
+	pen.setWidth(0); // How did adding this single line fix everything???
 	
 	// Setup specified font settings
 	auto font = QFont("Monospace");
