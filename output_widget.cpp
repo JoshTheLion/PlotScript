@@ -71,7 +71,7 @@ void OutputWidget::drawItem(Settings data){
   // Setup painter tools
   QPen pen;
   pen.setColor(Qt::black);
-  pen.setBrush(Qt::SolidPattern);
+  pen.setBrush(Qt::SolidPattern); // NoBrush?
 	pen.setWidth(0); // How did adding this single line fix everything???
 	
 	// Setup specified font settings
@@ -130,14 +130,21 @@ void OutputWidget::drawItem(Settings data){
 
   case Settings::Type::Point_Type:
 
-    // Initialize and center a bounding rect at the origin of its local item coordinates
+    // Set up a bounding rectangle
     bRect = QRectF(0.0, 0.0, data.size, data.size);
-    bRect.moveCenter(QPointF(0.0, 0.0));
 
     // Create an Ellipse bounded by the QRectF and add to scene
     m_item = m_scene->addEllipse(bRect, pen, pen.brush());
     
-    // Move item to specified location
+		// Translate item center-point to scene origin
+		dx = 0 - (m_item->boundingRect().center().x());
+		dy = 0 - (m_item->boundingRect().center().y());
+		m_item->moveBy(dx, dy);
+
+		// Re-assign item origin used for transformations
+		m_item->setTransformOriginPoint(m_item->boundingRect().center());
+
+		// Translate item center-point to input coordinates
     m_item->moveBy(data.pos.x(), data.pos.y());
 
     qDebug() << "Ellipse Data: ";
