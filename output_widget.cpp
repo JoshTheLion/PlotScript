@@ -71,7 +71,7 @@ void OutputWidget::drawItem(Settings data){
   // Setup painter tools
   QPen pen;
   pen.setColor(Qt::black);
-  pen.setBrush(Qt::SolidPattern); // NoBrush?
+  //pen.setBrush(Qt::SolidPattern); // NoBrush?
 	pen.setWidth(0); // How did adding this single line fix everything???
 	
 	// Setup specified font settings
@@ -101,8 +101,8 @@ void OutputWidget::drawItem(Settings data){
     m_item->setScale(data.scale);
     
     // Translate item center-point to scene origin
-    dx = 0 - (m_item->boundingRect().center().x());
-    dy = 0 - (m_item->boundingRect().center().y());
+    dx = 0.0 - (m_item->boundingRect().center().x());
+    dy = 0.0 - (m_item->boundingRect().center().y());
     m_item->moveBy(dx, dy);
     
     // Re-assign item origin used for transformations
@@ -134,18 +134,18 @@ void OutputWidget::drawItem(Settings data){
     bRect = QRectF(0.0, 0.0, data.size, data.size);
 
     // Create an Ellipse bounded by the QRectF and add to scene
-    m_item = m_scene->addEllipse(bRect, pen, pen.brush());
+    m_item = m_scene->addEllipse(bRect, pen, QBrush(Qt::SolidPattern));
     
 		// Translate item center-point to scene origin
-		dx = 0 - (m_item->boundingRect().center().x());
-		dy = 0 - (m_item->boundingRect().center().y());
+		dx = 0.0 - (m_item->boundingRect().center().x());
+		dy = 0.0 - (m_item->boundingRect().center().y());
 		m_item->moveBy(dx, dy);
-
-		// Re-assign item origin used for transformations
-		m_item->setTransformOriginPoint(m_item->boundingRect().center());
 
 		// Translate item center-point to input coordinates
     m_item->moveBy(data.pos.x(), data.pos.y());
+
+		// Re-assign item origin used for transformations
+		m_item->setTransformOriginPoint(m_item->boundingRect().center());
 
     qDebug() << "Ellipse Data: ";
     qDebug() << "Rect Center: " << m_item->mapToScene(m_item->boundingRect().center()) << m_item->childrenBoundingRect().center();
