@@ -80,9 +80,10 @@ void OutputWidget::drawItem(Settings data){
 	font.setPointSize(1);
 
   // Compiler forced me to declare these up here for some reason
-  QRectF bRect;
-  double dx;
-  double dy;
+	QPointF origin;
+	QRectF bRect;
+  qreal dx;
+  qreal dy;
 
   Settings::Type name = data.itemType;
 
@@ -101,8 +102,9 @@ void OutputWidget::drawItem(Settings data){
     m_item->setScale(data.scale);
     
     // Translate item center-point to scene origin
-    dx = 0.0 - (m_item->boundingRect().center().x());
-    dy = 0.0 - (m_item->boundingRect().center().y());
+		origin = m_item->mapFromScene(0.0, 0.0);
+		dx = origin.x() - (m_item->boundingRect().center().x());
+		dy = origin.y() - (m_item->boundingRect().center().y());
     m_item->moveBy(dx, dy);
     
     // Re-assign item origin used for transformations
@@ -134,11 +136,12 @@ void OutputWidget::drawItem(Settings data){
     bRect = QRectF(0.0, 0.0, data.size, data.size);
 
     // Create an Ellipse bounded by the QRectF and add to scene
-    m_item = m_scene->addEllipse(bRect, pen, QBrush(Qt::SolidPattern));
+    m_item = m_scene->addEllipse(bRect, pen, pen.brush());
     
 		// Translate item center-point to scene origin
-		dx = 0.0 - (m_item->boundingRect().center().x());
-		dy = 0.0 - (m_item->boundingRect().center().y());
+		origin = m_item->mapFromScene(0.0, 0.0);
+		dx = origin.x() - (m_item->boundingRect().center().x());
+		dy = origin.y() - (m_item->boundingRect().center().y());
 		m_item->moveBy(dx, dy);
 
 		// Translate item center-point to input coordinates
