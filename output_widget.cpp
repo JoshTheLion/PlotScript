@@ -134,6 +134,7 @@ void OutputWidget::drawItem(Settings data){
 
     // Set up a bounding rectangle
     bRect = QRectF(0.0, 0.0, data.size, data.size);
+		bRect.moveCenter(QPointF(0.0, 0.0));
 
     // Create an Ellipse bounded by the QRectF and add to scene
     m_item = m_scene->addEllipse(bRect, pen, pen.brush());
