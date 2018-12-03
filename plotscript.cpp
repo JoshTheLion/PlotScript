@@ -2,11 +2,15 @@
 #include <sstream>
 #include <iostream>
 #include <fstream>
+#include <thread>
 
 #include "interpreter.hpp"
 #include "semantic_error.hpp"
 #include "startup_config.hpp"
+#include "message_queue.hpp"
 
+typedef std::string InputMessage;
+typedef Expression OutputMessage;
 
 void prompt(){
   std::cout << "\nplotscript> ";
@@ -44,7 +48,6 @@ int startup(Interpreter & interp){
   else{
     try{
       Expression exp = interp.evaluate();
-      //std::cout << exp << std::endl;
     }
     catch(const SemanticError & ex){
       ifs.close();
@@ -106,35 +109,48 @@ int eval_from_command(std::string argexp){
 
 // A REPL is a repeated read-eval-print loop
 void repl(){
-  Interpreter interp;
   
-  /*** Evaluate startup.pls ***/
-  if(startup(interp) != 0){
-    error("Invalid Startup Program.");
-  }
+	MessageQueue<std::string> inputQueue;
+	MessageQueue<Expression> outputQueue;
+
+	Interpreter interp(&inputQueue, &outputQueue);
+	std::thread kernelThread(&Interpreter::threadEvalLoop, &interp);
+	
+	//std::thread * kernelThread;
+	//kernelThread = new std::thread(&Interpreter::parseStream, &interp);
 
   while(!std::cin.eof()){
     
     prompt();
-    std::string line = readline();
+		InputMessage line = readline();
     
     if(line.empty()) continue;
+		
+		// Check for special kernel control commands
 
-    std::istringstream expression(line);
-    
-    if(!interp.parseStream(expression)){
-      error("Invalid Expression. Could not parse.");
-    }
-    else{
-      try{
-	    Expression exp = interp.evaluate();
-	    std::cout << exp << std::endl;
-      }
-      catch(const SemanticError & ex){
-        std::cerr << ex.what() << std::endl;
-      }
-    }
-  }
+		// Push message to input queue
+		inputQueue.push(line);
+
+		// Asynchronously receive output results to display
+		OutputMessage result;
+		outputQueue.wait_and_pop(result);
+		std::cout << result << std::endl;
+	}
+	
+	// Tell the Interpreter kernel to stop
+	inputQueue.push("%stop");
+	kernelThread.join();
+
+	// Double-check current # of threads is 1
+
+	// Display any remaining results in queue
+	//while(!outputQueue.empty()){
+	//	OutputMessage result;
+	//	outputQueue.wait_and_pop(result);
+	//	std::cout << result << std::endl;
+	//}
+
+	// End of program
 }
 
 int main(int argc, char *argv[])

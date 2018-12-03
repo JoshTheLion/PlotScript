@@ -36,6 +36,7 @@ set(unittest_src
 # add source for any TUI modules here
 set(tui_src
  layout_parameters.h
+ message_queue.hpp
 )
 
 # EDIT
@@ -110,8 +111,8 @@ if(DEFINED ENV{ECE3574_REFERENCE_ENV})
   set(GCC_COVERAGE_COMPILE_FLAGS "-g -O0 -fprofile-arcs -ftest-coverage")
   set_target_properties(interpreter PROPERTIES COMPILE_FLAGS ${GCC_COVERAGE_COMPILE_FLAGS} )
   set_target_properties(unit_tests PROPERTIES COMPILE_FLAGS ${GCC_COVERAGE_COMPILE_FLAGS} )
-  target_link_libraries(unit_tests interpreter gcov)
-  target_link_libraries(plotscript interpreter gcov)
+  target_link_libraries(unit_tests interpreter pthread gcov)
+  target_link_libraries(plotscript interpreter pthread gcov)
   add_custom_target(coverage
     COMMAND ${CMAKE_COMMAND} -E env "ROOT=${CMAKE_CURRENT_SOURCE_DIR}"
     ${CMAKE_CURRENT_SOURCE_DIR}/scripts/coverage.sh)

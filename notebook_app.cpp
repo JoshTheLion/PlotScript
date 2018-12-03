@@ -12,32 +12,55 @@
 
 NotebookApp::NotebookApp(QWidget * parent) : QWidget(parent){
 	
-	m_input = new InputWidget();
-	m_input->setParent(parent);
-    
-	m_output = new OutputWidget();
-	m_output->setParent(parent);
-    
-    /*--- Run Startup Script ---*/
-    startup(m_interp);
-
-    /*--- Read User Input ---*/
-    QObject::connect(m_input, SIGNAL(textUpdated(QString)),
-      this, SLOT(getUserText(QString)));
-    
-    /*--- Evaluate with Plotscript ---*/
-    
-    /*--- Display Result Graphics ---*/
-    QObject::connect(this, SIGNAL(sendResult(Settings)),
-      m_output, SLOT(getResult(Settings)));
-    
-    auto layout = new QGridLayout();
+	m_input_widget = new InputWidget();
+	//m_input_widget->setObjectName("input");
+	m_input_widget->setParent(parent);
 	
-	layout->addWidget(m_input, 0, 0);
-	layout->addWidget(m_output, 1, 0);
+
+	m_output_widget = new OutputWidget();
+	//m_input_widget->setObjectName("output");
+	m_output_widget->setParent(parent);
+	
+	/*--- Run Startup Script ---*/
+	startup(m_interp);
+
+	/*--- Start Interpreter Kernel Thread ---*/
+	//m_queue_in = &InputQueue();
+	//m_queue_out = &OutputQueue();
+	//m_interp = new Interpreter();
+	//m_interp = Interpreter(&m_queue_in, &m_queue_out);
+	//std::thread kernelThread(&Interpreter::threadEvalLoop, &m_interp);
+
+  /*--- Read User Input ---*/
+  QObject::connect(m_input_widget, SIGNAL(textUpdated(QString)),
+    this, SLOT(getUserText(QString)));
+  
+  /*--- Evaluate with Plotscript ---*/
+  
+
+  /*--- Display Result Graphics ---*/
+  QObject::connect(this, SIGNAL(sendResult(Settings)),
+    m_output_widget, SLOT(getResult(Settings)));
+  
+  auto layout = new QGridLayout();
+	
+	layout->addWidget(m_input_widget, 0, 0);
+	layout->addWidget(m_output_widget, 1, 0);
 	
 	setLayout(layout);
-    resize(500, 500);
+  resize(500, 500);
+}
+
+
+void NotebookApp::getUserText(QString inExp){
+  
+  qDebug() << "Slot: " << inExp << "\t";
+  evalExpression(inExp.toStdString());
+	
+	// Check for special kernel control commands
+
+	// Push message to input queue
+	//m_queue_in.push(inExp.toStdString());
 }
 
 int NotebookApp::startup(Interpreter & interp){
@@ -71,14 +94,13 @@ int NotebookApp::startup(Interpreter & interp){
   return EXIT_SUCCESS;
 }
 
-void NotebookApp::getUserText(QString inExp){
-  
-  qDebug() << "Slot: " << inExp << "\t";
-  evalExpression(inExp.toStdString());
-}
+//void NotebookApp::threadEvalLoop(){
+//	// Wait for results to display
+//}
 
 bool NotebookApp::evalExpression(std::string inExp){
   
+	//==================================================================
   std::istringstream inStream(inExp);
   std::ostringstream outStream; // Need this to convert Expression->string
   std::string strResult = "default";
@@ -103,10 +125,12 @@ bool NotebookApp::evalExpression(std::string inExp){
       return EXIT_FAILURE;
     }	
   }
-  
+  //==================================================================
   qDebug() << "Expression Out: " << QString::fromStdString(strResult);
-  Settings result = setGraphicsType(expResult);
+  
+	Settings result = setGraphicsType(expResult);
   emit sendResult(result);
+
   return EXIT_SUCCESS;
 }
 

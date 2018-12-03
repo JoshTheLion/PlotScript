@@ -5,6 +5,7 @@
 #include "output_widget.hpp"
 #include "interpreter.hpp"
 #include "startup_config.hpp"
+#include "message_queue.hpp"
 #include "settings.h"
 
 #include <QWidget>
@@ -29,12 +30,20 @@ class NotebookApp : public QWidget {
   private:
     
     // Composite objects
-    InputWidget * m_input;
-    OutputWidget * m_output;
-    Interpreter m_interp;
+    InputWidget * m_input_widget;
+    OutputWidget * m_output_widget;
+    
+		// The thread-safe message queue channels for kernel I/O
+		//InputQueue m_queue_in;
+		//OutputQueue m_queue_out;
+		
+		// The interpreter kernel
+		//Interpreter m_interp = Interpreter(&m_queue_in, &m_queue_out);
+		Interpreter m_interp;
 
     // Mimick Plotscript to evaluate input
-    int startup(Interpreter & interp);
+		//void threadEvalLoop();
+		int startup(Interpreter & interp);
     bool evalExpression(std::string inExp);
     Settings errFormat(const std::string & message);
 
