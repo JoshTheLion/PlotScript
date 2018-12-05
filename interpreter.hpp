@@ -21,13 +21,14 @@ It maintains an environment during evaluation.
 #include "semantic_error.hpp"
 //#include "startup_config.hpp"
 #include "message_queue.hpp"
+#include "message.hpp"
 
 // define thread-safe message queues
-typedef std::string InputMessage;
-typedef Expression OutputMessage;
+//typedef std::string InputMessage;
+//typedef Expression OutputMessage;
 
-typedef MessageQueue<InputMessage> InputQueue;
-typedef MessageQueue<OutputMessage> OutputQueue;
+//typedef MessageQueue<InputMessage> InputQueue;
+//typedef MessageQueue<OutputMessage> OutputQueue;
 
 /*! \class Interpreter
 \brief Class to parse and evaluate an expression (program)
@@ -41,7 +42,7 @@ public:
 	
 	Interpreter();
 
-	Interpreter(InputQueue * inputQ, OutputQueue * outputQ);
+	Interpreter(MessageQueue<Message> * inputQ, MessageQueue<Message> * outputQ);
 	
 	/// Open the start-up file and evaluate the program
 	void startup();
@@ -68,8 +69,8 @@ private:
 	Expression ast;
 
 	/// The thread-safe message queue channels for kernel I/O
-	InputQueue * inQ;
-	OutputQueue * outQ;
+	MessageQueue<Message> * inputQ;
+	MessageQueue<Message> * outputQ;
   
 };
 

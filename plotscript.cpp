@@ -8,9 +8,10 @@
 #include "semantic_error.hpp"
 #include "startup_config.hpp"
 #include "message_queue.hpp"
+#include "message.hpp"
 
-typedef std::string InputMessage;
-typedef Expression OutputMessage;
+//typedef std::string InputMessage;
+//typedef Expression OutputMessage;
 
 void prompt(){
   std::cout << "\nplotscript> ";
@@ -110,8 +111,8 @@ int eval_from_command(std::string argexp){
 // A REPL is a repeated read-eval-print loop
 void repl(){
   
-	MessageQueue<std::string> inputQueue;
-	MessageQueue<Expression> outputQueue;
+	MessageQueue<Message> inputQueue;
+	MessageQueue<Message> outputQueue;
 
 	Interpreter interp(&inputQueue, &outputQueue);
 	std::thread kernelThread(&Interpreter::threadEvalLoop, &interp);
@@ -122,33 +123,33 @@ void repl(){
   while(!std::cin.eof()){
     
     prompt();
-		InputMessage line = readline();
+		std::string line = readline();
     
     if(line.empty()) continue;
 		
-		// Check for special kernel control commands
+		// Check for special kernel control commands?
 
 		// Push message to input queue
-		inputQueue.push(line);
+		inputQueue.push(Message(line));
 
 		// Asynchronously receive output results to display
-		OutputMessage result;
+		Message result;
 		outputQueue.wait_and_pop(result);
-		std::cout << result << std::endl;
+		
+		try{
+      Expression exp = result.getExp();
+			std::cout << exp << std::endl;
+    }
+    catch(const SemanticError & ex){
+      std::cerr << ex.what() << std::endl;
+    }
 	}
 	
 	// Tell the Interpreter kernel to stop
-	inputQueue.push("%stop");
+	inputQueue.push(Message("%stop"));
 	kernelThread.join();
 
 	// Double-check current # of threads is 1
-
-	// Display any remaining results in queue
-	//while(!outputQueue.empty()){
-	//	OutputMessage result;
-	//	outputQueue.wait_and_pop(result);
-	//	std::cout << result << std::endl;
-	//}
 
 	// End of program
 }

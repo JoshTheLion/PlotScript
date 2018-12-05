@@ -87,106 +87,103 @@ void OutputWidget::drawItem(Settings data){
 
   Settings::Type name = data.itemType;
 
-  switch (name) {
+  switch(name){
   case Settings::Type::TUI_Type:
-
-    m_item = m_scene->addText(data.text, font);
-
-    break;
-
+		{
+			m_item = m_scene->addText(data.text, font);
+		}
+		break;
   case Settings::Type::Text_Type:
-    
-    // Initialize Text item
-    //m_item = m_scene->addText(data.text, QFont("Courier", 1, 1, false));
-		m_item = m_scene->addText(data.text, font);
-    m_item->setScale(data.scale);
-    
-    // Translate item center-point to scene origin
-		origin = m_item->mapFromScene(0.0, 0.0);
-		dx = origin.x() - (m_item->boundingRect().center().x());
-		dy = origin.y() - (m_item->boundingRect().center().y());
-    m_item->moveBy(dx, dy);
-    
-    // Re-assign item origin used for transformations
-    m_item->setTransformOriginPoint(m_item->boundingRect().center());
-    
-    qDebug() << "Transform Origin Point 1: " << m_item->transformOriginPoint() << m_item->mapToScene(m_item->transformOriginPoint());
+		{
+			// Initialize Text item
+			//m_item = m_scene->addText(data.text, QFont("Courier", 1, 1, false));
+			m_item = m_scene->addText(data.text, font);
+			m_item->setScale(data.scale);
 
-    // Should now rotate around item's center instead of corner
-    m_item->setRotation(data.rotate);
+			// Translate item center-point to scene origin
+			origin = m_item->mapFromScene(0.0, 0.0);
+			dx = origin.x() - (m_item->boundingRect().center().x());
+			dy = origin.y() - (m_item->boundingRect().center().y());
+			m_item->moveBy(dx, dy);
 
-    // Translate item center-point to input coordinates
-    m_item->moveBy(data.pos.x(), data.pos.y());
+			// Re-assign item origin used for transformations
+			m_item->setTransformOriginPoint(m_item->boundingRect().center());
 
-    qDebug() << "Transform Origin Point 2: " << m_item->transformOriginPoint() << m_item->mapToScene(m_item->transformOriginPoint());
+			qDebug() << "Transform Origin Point 1: " << m_item->transformOriginPoint() << m_item->mapToScene(m_item->transformOriginPoint());
 
-    qDebug() << "Text Data: ";
-    qDebug() << "Item Rect Corners: " << m_item->boundingRect().topLeft() << m_item->boundingRect().bottomRight();
-    qDebug() << "Item Rect Center: " << m_item->boundingRect().center();
-    qDebug() << "Item Pos: " << m_item->pos();
-    qDebug() << "Scene Rect Corners: " << m_item->sceneBoundingRect().topLeft() << m_item->sceneBoundingRect().bottomRight();
-    qDebug() << "Scene Rect Center: " << m_item->sceneBoundingRect().center();
-    qDebug() << "Scene Pos: " << m_item->scenePos();
-    qDebug() << "View Pos: " << m_view->itemAt(0, 0) << m_view->itemAt(data.pos);
-    break;
+			// Should now rotate around item's center instead of corner
+			m_item->setRotation(data.rotate);
 
+			// Translate item center-point to input coordinates
+			m_item->moveBy(data.pos.x(), data.pos.y());
+
+			qDebug() << "Transform Origin Point 2: " << m_item->transformOriginPoint() << m_item->mapToScene(m_item->transformOriginPoint());
+
+			qDebug() << "Text Data: ";
+			qDebug() << "Item Rect Corners: " << m_item->boundingRect().topLeft() << m_item->boundingRect().bottomRight();
+			qDebug() << "Item Rect Center: " << m_item->boundingRect().center();
+			qDebug() << "Item Pos: " << m_item->pos();
+			qDebug() << "Scene Rect Corners: " << m_item->sceneBoundingRect().topLeft() << m_item->sceneBoundingRect().bottomRight();
+			qDebug() << "Scene Rect Center: " << m_item->sceneBoundingRect().center();
+			qDebug() << "Scene Pos: " << m_item->scenePos();
+			qDebug() << "View Pos: " << m_view->itemAt(0, 0) << m_view->itemAt(data.pos);
+		}
+		break;
   case Settings::Type::Point_Type:
+		{
+			// Set up a bounding rectangle
+			bRect = QRectF(0.0, 0.0, data.size, data.size);
+			bRect.moveCenter(QPointF(0.0, 0.0));
 
-    // Set up a bounding rectangle
-    bRect = QRectF(0.0, 0.0, data.size, data.size);
-		bRect.moveCenter(QPointF(0.0, 0.0));
-
-    // Create an Ellipse bounded by the QRectF and add to scene
-    m_item = m_scene->addEllipse(bRect, pen, pen.brush());
+			// Create an Ellipse bounded by the QRectF and add to scene
+			m_item = m_scene->addEllipse(bRect, pen, pen.brush());
     
-		// Translate item center-point to scene origin
-		origin = m_item->mapFromScene(0.0, 0.0);
-		dx = origin.x() - (m_item->boundingRect().center().x());
-		dy = origin.y() - (m_item->boundingRect().center().y());
-		m_item->moveBy(dx, dy);
+			// Translate item center-point to scene origin
+			origin = m_item->mapFromScene(0.0, 0.0);
+			dx = origin.x() - (m_item->boundingRect().center().x());
+			dy = origin.y() - (m_item->boundingRect().center().y());
+			m_item->moveBy(dx, dy);
 
-		// Translate item center-point to input coordinates
-    m_item->moveBy(data.pos.x(), data.pos.y());
+			// Translate item center-point to input coordinates
+			m_item->moveBy(data.pos.x(), data.pos.y());
 
-		// Re-assign item origin used for transformations
-		m_item->setTransformOriginPoint(m_item->boundingRect().center());
+			// Re-assign item origin used for transformations
+			m_item->setTransformOriginPoint(m_item->boundingRect().center());
 
-    qDebug() << "Ellipse Data: ";
-    qDebug() << "Rect Center: " << m_item->mapToScene(m_item->boundingRect().center()) << m_item->childrenBoundingRect().center();
-    qDebug() << "Item Pos: " << m_item->pos(); // Position of item's center point in parent coordinates
-    qDebug() << "Scene Pos: " << m_item->scenePos() << m_scene->itemAt(data.pos, QTransform());
-    qDebug() << "View Pos: " << m_view->itemAt(0, 0) << m_view->itemAt(data.pos);
-    break;
-
+			qDebug() << "Ellipse Data: ";
+			qDebug() << "Rect Center: " << m_item->mapToScene(m_item->boundingRect().center()) << m_item->childrenBoundingRect().center();
+			qDebug() << "Item Pos: " << m_item->pos(); // Position of item's center point in parent coordinates
+			qDebug() << "Scene Pos: " << m_item->scenePos() << m_scene->itemAt(data.pos, QTransform());
+			qDebug() << "View Pos: " << m_view->itemAt(0, 0) << m_view->itemAt(data.pos);
+		}
+		break;
   case Settings::Type::Line_Type:
+		{
+			pen.setWidth(data.thicc);
+			m_item = m_scene->addLine(QLineF(data.p1, data.p2), pen);
 
-    pen.setWidth(data.thicc);
-    m_item = m_scene->addLine(QLineF(data.p1, data.p2), pen);
-
-    qDebug() << "Line Data: ";
-    qDebug() << "Rect Center: " << m_item->boundingRect().center() << m_item->childrenBoundingRect().center();
-    qDebug() << "Item Pos: " << m_item->pos();
-    qDebug() << "Scene Pos: " << m_item->scenePos();
-    qDebug() << "View Pos: " << m_view->itemAt(0, 0) << m_view->itemAt(data.pos);
-    break;
-
+			qDebug() << "Line Data: ";
+			qDebug() << "Rect Center: " << m_item->boundingRect().center() << m_item->childrenBoundingRect().center();
+			qDebug() << "Item Pos: " << m_item->pos();
+			qDebug() << "Scene Pos: " << m_item->scenePos();
+			qDebug() << "View Pos: " << m_view->itemAt(0, 0) << m_view->itemAt(data.pos);
+		}
+		break;
   case Settings::Type::List_Type:
+		{
+			qDebug() << "List Data: ";
 
-    qDebug() << "List Data: ";
-
-    // Recursively display each entry using the rules above without any surrounding parenthesis.
-    for(auto item : data.list){
-      qDebug() << item.itemType << item.pos << item.text << item.size << item.thicc << item.p1 << item.p2 << "\n";
-      drawItem(item);
-    }
-    break;
-
+			// Recursively display each entry using the rules above without any surrounding parenthesis.
+			for(auto item : data.list){
+				qDebug() << item.itemType << item.pos << item.text << item.size << item.thicc << item.p1 << item.p2 << "\n";
+				drawItem(item);
+			}
+		}
+		break;
   default:
-
-    qDebug() << "Invalid Item Type";
-    break;
+		qDebug() << "Invalid Item Type";
+		return;
   }
-  
 }
 
 void OutputWidget::drawCrosshairs(){

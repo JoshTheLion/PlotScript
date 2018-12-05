@@ -2,6 +2,7 @@
 
 // system includes
 #include <stdexcept>
+#include <iostream>
 
 // module includes
 #include "token.hpp"
@@ -13,14 +14,14 @@
 
 Interpreter::Interpreter()
 {
-	inQ = nullptr;
-	outQ = nullptr;
+	inputQ = nullptr;
+	outputQ = nullptr;
 }
 
-Interpreter::Interpreter(InputQueue * inputQ, OutputQueue * outputQ)
+Interpreter::Interpreter(MessageQueue<Message> * inQ, MessageQueue<Message> * outQ)
 {
-	inQ = inputQ;
-	outQ = outputQ;
+	inputQ = inQ;
+	outputQ = outQ;
 	startup();
 }
 
@@ -67,15 +68,17 @@ void Interpreter::startup()
 // Process Input Queue Messages
 void Interpreter::threadEvalLoop()
 {
+	// Call start function
 	while(true){
 
 		// take a unit of work from the input queue
-		InputMessage line;
-		inQ->wait_and_pop(line);
+		Message line;
+		inputQ->wait_and_pop(line);
 
-		if (line == "%stop") break;
+		// Call stop function
+		if (line.getString() == "%stop") break;
 
-		std::istringstream inStream(line);
+		std::istringstream inStream(line.getString());
 		std::ostringstream outStream;
 		std::string strResult;
 		Expression expResult;
@@ -95,7 +98,7 @@ void Interpreter::threadEvalLoop()
 		}
 
 		// put the result back into the output queue
-		outQ->push(expResult);
+		outputQ->push(Message(expResult));
 	}
 	// End of Program
 }

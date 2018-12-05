@@ -10,18 +10,24 @@ include_directories(${CMAKE_BINARY_DIR})
 # add any files you create related to the interpreter here
 # excluding unit tests
 set(interpreter_src
+  message.hpp
+  message_queue.hpp
+  layout_parameters.h
   token.hpp token.cpp
   atom.hpp atom.cpp
   environment.hpp environment.cpp
   expression.hpp expression.cpp
   parse.hpp parse.cpp
   interpreter.hpp interpreter.cpp
-  )
+)
 
 # EDIT
 # add any files you create related to interpreter unit testing here
 set(unittest_src
   catch.hpp
+  #message.hpp
+  #message_queue.hpp
+  #layout_parameters.h
   atom_tests.cpp
   environment_tests.cpp
   expression_tests.cpp
@@ -30,13 +36,14 @@ set(unittest_src
   semantic_error.hpp
   token_tests.cpp
   unit_tests.cpp
-  )
+)
 
 # EDIT
 # add source for any TUI modules here
 set(tui_src
- layout_parameters.h
- message_queue.hpp
+  #message.hpp
+  #message_queue.hpp
+  #layout_parameters.h
 )
 
 # EDIT
