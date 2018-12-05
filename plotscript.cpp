@@ -108,23 +108,82 @@ int eval_from_command(std::string argexp){
   return eval_from_stream(expression);
 }
 
+bool isRunning(const std::thread * kernel) noexcept{
+	
+	//return kernel.joinable();
+	if(kernel != nullptr){
+		return kernel->joinable();
+	}
+	return false;
+}
+
+// Start an interpreter kernel in a separate thread.
+// It should have no effect if a thread is already running.
+// The number of threads used should be two after this command.
+void start(std::thread * kernel, Interpreter * interp){
+
+	if(!isRunning(kernel)){
+		*kernel = std::thread(&Interpreter::threadEvalLoop, std::ref(*interp));
+	}
+}
+
+// Stop a running interpreter kernel. It should have no effect if a
+// thread is already stopped.
+// The number of threads used should be one after this command.
+void stop(std::thread * kernel, MessageQueue<Message> * inQ){
+	
+	if(isRunning(kernel)){
+		inQ->push(Message(Message::Type::StringType, "%stop"));
+		kernel->join();		// Wait for thread execution to catch up
+		//delete kernel;		// De-allocate thread object heap memory
+		kernel = nullptr;	// Remove old memory address stored
+	}
+}
+
+// Stop and reset a running interpreter kernel to the default state,
+// clearing environment. It should then start a new running kernel.
+// The number of threads used should be two after this command.
+void reset(std::thread * kernel, Interpreter * interp, MessageQueue<Message> * inQ){
+	
+	if(isRunning(kernel)){
+		inQ->push(Message(Message::Type::StringType, "%reset"));
+		kernel->join();		// Wait for thread execution to catch up
+		//kernel->~thread();		// De-allocate thread object heap memory
+		kernel = nullptr;	// Remove old memory address stored
+	}
+	
+	if(!isRunning(kernel)){
+		*kernel = std::thread(&Interpreter::threadEvalLoop, std::ref(*interp));
+	}
+}
+
+// If a user enters a plotscript expression when the interpreter is not
+// running, display the error message: "Error: interpreter kernel not running".
+
 // A REPL is a repeated read-eval-print loop
 void repl(){
   
 	MessageQueue<Message> inputQueue;
 	MessageQueue<Message> outputQueue;
 
+	// Initialize Interpreter object and check results of startup
 	Interpreter interp(&inputQueue, &outputQueue);
 	
-	/*** Evaluate startup.pls ***/
-	if (startup(interp) != 0){
-		error("Invalid Startup Program.");
-	}
+	//if(!outputQueue.empty()){
+	//	Message result;
+	//	if(outputQueue.try_pop(result)){
+	//		try{
+	//			Expression exp = result.getExp();
+	//			std::cout << exp << std::endl;
+	//		}
+	//		catch (const SemanticError & ex){
+	//			std::cerr << ex.what() << std::endl;
+	//		}
+	//	}
+	//}
 
-	std::thread kernelThread(&Interpreter::threadEvalLoop, &interp);
-	
-	//std::thread * kernelThread;
-	//kernelThread = new std::thread(&Interpreter::parseStream, &interp);
+	std::thread * kernelThread = nullptr;
+	start(kernelThread, &interp);
 
   while(!std::cin.eof()){
     
@@ -134,9 +193,27 @@ void repl(){
     if(line.empty()) continue;
 		
 		// Check for special kernel control commands?
+		if(line == "%exit"){
+			stop(kernelThread, &inputQueue);
+			break;
+		}
+		else if(line == "%start"){
+			start(kernelThread, &interp);
+		}
+		else if(line == "%stop"){
+			stop(kernelThread, &inputQueue);
+		}
+		else if(line == "%reset"){
+			reset(kernelThread, &interp, &inputQueue);
+		}
+		else if(!isRunning(kernelThread)){
+			error("interpreter kernel not running");
+			continue;
+		}
 
 		// Push message to input queue
-		inputQueue.push(Message(line));
+		Message message(Message::Type::StringType, line);
+		inputQueue.push(message);
 
 		// Asynchronously receive output results to display
 		Message result;
@@ -151,11 +228,10 @@ void repl(){
     }
 	}
 	
-	// Tell the Interpreter kernel to stop
-	inputQueue.push(Message("%stop"));
-	kernelThread.join();
+	// Double-check the Interpreter kernel was told to stop
+	stop(kernelThread, &inputQueue);
 
-	// Double-check current # of threads is 1
+	// Double-check current # of threads is 1 (how can I do this?)
 
 	// End of program
 }

@@ -40,8 +40,11 @@ public:
 	/// Open the start-up file and evaluate the program
 	void startup();
 
-	/// Main thread function that polls the shared Input Message Queue until exit message is read
+	/// Main thread function that polls the input MessageQueue until interrupt message is received
 	void threadEvalLoop();
+	
+	/// Process the input message and return result message
+	Message evalStream(std::istream & stream);
 
   /*! Parse into an internal Expression from a stream
     \param expression the raw text stream repreenting the candidate expression

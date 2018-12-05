@@ -17,16 +17,27 @@
 class Message
 {
 	// Convenience typedef labels
-	typedef std::exception_ptr Error;
+	//typedef std::exception_ptr Error;
 	typedef std::string String;
+	typedef std::string Error;
 
 public:
 	
+	// internal enum of known types
+	enum Type { NoneType, StringType, ExpressionType, ErrorType };
+
 	// constructors for use in container push, assignment, and output
 	Message() : type(NoneType){};
-	Message(const String & s) : type(StringType), stringValue(s){};
-	Message(const Expression & e) : type(ExpressionType), expValue(e){};
-	Message(const Error & e) : type(ErrorType), errValue(e){};
+	Message(Type t, const String & s){
+		if(t == StringType) setString(s);
+		if(t == ErrorType)  setError(s);
+		else setNone();
+	}
+	Message(Type t, const Expression & e){
+		if(t == ExpressionType) setExp(e);
+		else setNone();
+	}
+	//Message(InterpResultType t, const Error & e) : type(ErrorType), errValue(e){};
 	
 	// assignment needed for wait_and_pop
 	Message & operator=(const Message & x){
@@ -42,12 +53,32 @@ public:
 				setExp(x.expValue);
 			}
 			else if (x.type == ErrorType){
-				setErr(x.errValue);
+				setError(x.errValue);
 			}
 		}
 		return *this;
 	}
 	
+	bool isNone() const noexcept{
+		return type == NoneType;
+	}
+
+	bool isString() const noexcept{
+		return type == StringType;
+	}
+	
+	bool isExpression() const noexcept{
+		return type == ExpressionType;
+	}
+	
+	bool isError() const noexcept{
+		return type == ErrorType;
+	}
+
+	void setNone(){
+		type = NoneType;
+	}
+
 	void setString(const String & value){
 		type = StringType;
 		stringValue = value;
@@ -58,7 +89,7 @@ public:
 		expValue = value;
 	}
 
-	void setErr(const Error & value){
+	void setError(const Error & value){
 		type = ErrorType;
 		errValue = value;
 	}
@@ -67,22 +98,21 @@ public:
 	Expression getExp(){
 		Expression result;
 		if(type == ExpressionType) { result = expValue; }
-		else if(type == ErrorType) { std::rethrow_exception(errValue); }
-		else if (type == StringType) { throw SemanticError(stringValue); }
+		else if(type == ErrorType) { throw SemanticError(errValue); }
 		return result;
-	};
+	}
 
 	String getString(){
 		String result;
-		if (type == StringType) { result = stringValue; }
+		if(type == StringType) { result = stringValue; }
 		return result;
-	};
+	}
 
 	bool operator==(const Message & right) const noexcept{
 
 		if (type != right.type) return false;
 
-		switch (type){
+		switch(type){
 		case NoneType:
 			if (right.type != NoneType) return false;
 			break;
@@ -114,16 +144,15 @@ public:
 private:
 	
 	// internal enum of known types
-	enum InterpResultType { NoneType, StringType, ExpressionType, ErrorType };
+	//enum Type { NoneType, StringType, ExpressionType, ErrorType };
 
 	// track the type
-	InterpResultType type;
+	Type type;
 	
 	// values for the known types
 	String stringValue;
 	Expression expValue;
 	Error errValue;
-	//SemanticError err;
 };
 
 //bool operator!=(const Message & left, const Message & right) noexcept{

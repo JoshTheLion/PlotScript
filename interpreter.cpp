@@ -22,91 +22,84 @@ Interpreter::Interpreter(MessageQueue<Message> * inQ, MessageQueue<Message> * ou
 {
 	inputQ = inQ;
 	outputQ = outQ;
-	//startup();
-}
-
-// Convert string->Expression for output messages
-Expression errorExp(const std::string & err_str)
-{
-	Expression expResult(Atom("Error"));
-	expResult.append(Expression(Atom(err_str)));
-	//expResult.setProperty("Error", flag);
-	return expResult;
+	startup();
 }
 
 void Interpreter::startup()
 {
   std::ifstream ifs(STARTUP_FILE);
-	std::ostringstream outStream;
 	std::string strResult;
-	Expression expResult;
+	Message result;
 
-  if(!ifs){
-    expResult = errorExp("Could not open startup file for reading.");
+  if( (!ifs) && (outputQ != nullptr) ){
+    strResult = "Error: Could not open startup file for reading.";
+		//outputQ->push(Message(Message::Type::ErrorType, strResult));
   }
-  
-  if(!parseStream(ifs)){
-    ifs.close();
-		expResult = errorExp("Invalid Startup Program. Could not parse.");
-  }
-  else{
-    try{
-			expResult = evaluate();
-			//outQ->push(expResult);
-    }
-    catch(const SemanticError & ex){
-      ifs.close();
-			outStream << "Invalid Startup Program: " << ex.what();
-			strResult = outStream.str();
-			expResult = errorExp(strResult);
-    }
-  }
+
+	// Only send message for evaluation errors
+	result = evalStream(ifs);
+	if( result.isError() && (outputQ != nullptr) ){
+		//outputQ->push(result);
+	}
+
 	ifs.close();
-  //outQ->push(expResult);
 }
 
-// Process Input Queue Messages
 void Interpreter::threadEvalLoop()
 {
-	// Call start function
 	while(true){
 
-		// take a unit of work from the input queue
+		// Take a unit of work from the input queue
 		Message line;
 		inputQ->wait_and_pop(line);
 
-		// Call stop function
-		if (line.getString() == "%stop") break;
-
+		// Check for special kernel control commands
+		if(line.getString() == "%stop") break;
+		if(line.getString() == "%exit") break;
+		if(line.getString() == "%reset"){
+			// Clear and reset the Environment
+			env.reset();
+			startup();
+			break;
+		}
+		
+		// Process input and add result to output MessageQueue
 		std::istringstream inStream(line.getString());
-		std::ostringstream outStream;
-		std::string strResult;
-		Expression expResult;
-
-		if(!parseStream(inStream)){
-			strResult = "Error: Invalid Expression. Could not parse.";
-			outputQ->push(Message(strResult));
-		}
-		else{
-			try{
-				expResult = evaluate();
-				outputQ->push(Message(expResult));
-			}
-			catch(const SemanticError & ex){
-				outStream << ex.what();
-				strResult = outStream.str();
-				//expResult = errorExp(strResult);
-				outputQ->push(Message(strResult));
-			}
-		}
-
-		// put the result back into the output queue
-		//outputQ->push(Message(expResult));
+		Message result = evalStream(inStream);
+		outputQ->push(result);
 	}
 	// End of Program
 }
 
+Message Interpreter::evalStream(std::istream & stream){
+	
+	std::ostringstream outStream;
+	std::string errResult;
+	Expression expResult;
+	Message result;
 
+	if(!parseStream(stream)){
+		errResult = "Error: Invalid Expression. Could not parse.";
+		result = Message(Message::Type::ErrorType, errResult);
+	}
+	else{
+		try{
+			expResult = evaluate();
+			result = Message(Message::Type::ExpressionType, expResult);
+		}
+		catch(const SemanticError & ex){
+			outStream << ex.what();
+			errResult = outStream.str();
+			result = Message(Message::Type::ErrorType, errResult);
+		}
+	}
+	return result;
+}
+
+
+/***********************************************************************
+	Backwards-Compatibility Base Code Methods (Don't Touch)
+**********************************************************************/
 bool Interpreter::parseStream(std::istream & expression) noexcept{
 
   TokenSequenceType tokens = tokenize(expression);
