@@ -23,13 +23,6 @@ It maintains an environment during evaluation.
 #include "message_queue.hpp"
 #include "message.hpp"
 
-// define thread-safe message queues
-//typedef std::string InputMessage;
-//typedef Expression OutputMessage;
-
-//typedef MessageQueue<InputMessage> InputQueue;
-//typedef MessageQueue<OutputMessage> OutputQueue;
-
 /*! \class Interpreter
 \brief Class to parse and evaluate an expression (program)
 

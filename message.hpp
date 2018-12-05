@@ -31,7 +31,7 @@ public:
 	// assignment needed for wait_and_pop
 	Message & operator=(const Message & x){
 		// prevent self-assignment
-		if(this != &x){
+		if(!(this == &x)){
 			if(x.type == NoneType){
 				type = NoneType;
 			}
@@ -49,19 +49,16 @@ public:
 	}
 	
 	void setString(const String & value){
-    
 		type = StringType;
 		stringValue = value;
 	}
 	
 	void setExp(const Expression & value){
-
 		type = ExpressionType;
 		expValue = value;
 	}
 
 	void setErr(const Error & value){
-
 		type = ErrorType;
 		errValue = value;
 	}
@@ -71,6 +68,7 @@ public:
 		Expression result;
 		if(type == ExpressionType) { result = expValue; }
 		else if(type == ErrorType) { std::rethrow_exception(errValue); }
+		else if (type == StringType) { throw SemanticError(stringValue); }
 		return result;
 	};
 

@@ -115,6 +115,12 @@ void repl(){
 	MessageQueue<Message> outputQueue;
 
 	Interpreter interp(&inputQueue, &outputQueue);
+	
+	/*** Evaluate startup.pls ***/
+	if (startup(interp) != 0){
+		error("Invalid Startup Program.");
+	}
+
 	std::thread kernelThread(&Interpreter::threadEvalLoop, &interp);
 	
 	//std::thread * kernelThread;

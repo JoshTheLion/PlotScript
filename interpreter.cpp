@@ -22,7 +22,7 @@ Interpreter::Interpreter(MessageQueue<Message> * inQ, MessageQueue<Message> * ou
 {
 	inputQ = inQ;
 	outputQ = outQ;
-	startup();
+	//startup();
 }
 
 // Convert string->Expression for output messages
@@ -84,21 +84,24 @@ void Interpreter::threadEvalLoop()
 		Expression expResult;
 
 		if(!parseStream(inStream)){
-			expResult = errorExp("Invalid Expression. Could not parse.");
+			strResult = "Error: Invalid Expression. Could not parse.";
+			outputQ->push(Message(strResult));
 		}
 		else{
 			try{
 				expResult = evaluate();
+				outputQ->push(Message(expResult));
 			}
 			catch(const SemanticError & ex){
 				outStream << ex.what();
 				strResult = outStream.str();
-				expResult = errorExp(strResult);
+				//expResult = errorExp(strResult);
+				outputQ->push(Message(strResult));
 			}
 		}
 
 		// put the result back into the output queue
-		outputQ->push(Message(expResult));
+		//outputQ->push(Message(expResult));
 	}
 	// End of Program
 }
