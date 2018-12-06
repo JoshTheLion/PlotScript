@@ -37,6 +37,9 @@ public:
 
 	Interpreter(MessageQueue<Message> * inputQ, MessageQueue<Message> * outputQ);
 	
+	// Overloaded function call operator to start threads in
+	//void Interpreter::operator()() const;
+
 	/// Open the start-up file and evaluate the program
 	void startup();
 

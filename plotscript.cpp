@@ -108,7 +108,9 @@ int eval_from_command(std::string argexp){
   return eval_from_stream(expression);
 }
 
-bool isRunning(const std::thread * kernel) noexcept{
+
+
+bool isRunning(std::thread * kernel) noexcept{
 	
 	//return kernel.joinable();
 	if(kernel != nullptr){
@@ -123,7 +125,7 @@ bool isRunning(const std::thread * kernel) noexcept{
 void start(std::thread * kernel, Interpreter * interp){
 
 	if(!isRunning(kernel)){
-		*kernel = std::thread(&Interpreter::threadEvalLoop, std::ref(*interp));
+		kernel = new std::thread(&Interpreter::threadEvalLoop, std::ref(*interp));
 	}
 }
 
@@ -153,7 +155,7 @@ void reset(std::thread * kernel, Interpreter * interp, MessageQueue<Message> * i
 	}
 	
 	if(!isRunning(kernel)){
-		*kernel = std::thread(&Interpreter::threadEvalLoop, std::ref(*interp));
+		kernel = new std::thread(&Interpreter::threadEvalLoop, std::ref(*interp));
 	}
 }
 
@@ -182,8 +184,10 @@ void repl(){
 	//	}
 	//}
 
+	// Start the new thread
 	std::thread * kernelThread = nullptr;
-	start(kernelThread, &interp);
+	kernelThread = new std::thread(&Interpreter::threadEvalLoop, std::ref(interp));
+	//std::thread interpKernel(interp);
 
   while(!std::cin.eof()){
     
@@ -194,17 +198,42 @@ void repl(){
 		
 		// Check for special kernel control commands?
 		if(line == "%exit"){
-			stop(kernelThread, &inputQueue);
+			if(isRunning(kernelThread)){
+				inputQueue.push(Message(Message::Type::StringType, "%stop"));
+				kernelThread->join();		// Wait for thread execution to catch up
+				//delete kernel;		// De-allocate thread object heap memory
+				kernelThread = nullptr;	// Remove old memory address stored
+			}
 			break;
 		}
 		else if(line == "%start"){
-			start(kernelThread, &interp);
+			if(!isRunning(kernelThread)){
+				kernelThread = new std::thread(&Interpreter::threadEvalLoop, std::ref(interp));
+			}
+			continue;
 		}
 		else if(line == "%stop"){
-			stop(kernelThread, &inputQueue);
+			if(isRunning(kernelThread)){
+				inputQueue.push(Message(Message::Type::StringType, "%stop"));
+				kernelThread->join();		// Wait for thread execution to catch up
+				//delete kernel;		// De-allocate thread object heap memory
+				kernelThread = nullptr;	// Remove old memory address stored
+			}
+			continue;
 		}
 		else if(line == "%reset"){
-			reset(kernelThread, &interp, &inputQueue);
+			if(isRunning(kernelThread)){
+				inputQueue.push(Message(Message::Type::StringType, "%reset"));
+				kernelThread->join();		// Wait for thread execution to catch up
+				//kernel->~thread();		// De-allocate thread object heap memory
+				kernelThread = nullptr;	// Remove old memory address stored
+			}
+
+			if(!isRunning(kernelThread)){
+				kernelThread = new std::thread(&Interpreter::threadEvalLoop, std::ref(interp));
+				continue;
+			}
+			else std::abort();
 		}
 		else if(!isRunning(kernelThread)){
 			error("interpreter kernel not running");
@@ -212,8 +241,7 @@ void repl(){
 		}
 
 		// Push message to input queue
-		Message message(Message::Type::StringType, line);
-		inputQueue.push(message);
+		inputQueue.push(Message(Message::Type::StringType, line));
 
 		// Asynchronously receive output results to display
 		Message result;
@@ -229,8 +257,12 @@ void repl(){
 	}
 	
 	// Double-check the Interpreter kernel was told to stop
-	stop(kernelThread, &inputQueue);
-
+	if(isRunning(kernelThread)){
+		inputQueue.push(Message(Message::Type::StringType, "%stop"));
+		kernelThread->join();		// Wait for thread execution to catch up
+		//delete kernel;		// De-allocate thread object heap memory
+		kernelThread = nullptr;	// Remove old memory address stored
+	}
 	// Double-check current # of threads is 1 (how can I do this?)
 
 	// End of program

@@ -45,6 +45,32 @@ void Interpreter::startup()
 	ifs.close();
 }
 
+//void Interpreter::operator()() const
+//{
+//	while(true){
+//
+//		// Take a unit of work from the input queue
+//		Message line;
+//		inputQ->wait_and_pop(line);
+//
+//		// Check for special kernel control commands
+//		if(line.getString() == "%stop") break;
+//		if(line.getString() == "%exit") break;
+//		if(line.getString() == "%reset"){
+//			// Clear and reset the Environment
+//			env.reset();
+//			startup();
+//			break;
+//		}
+//		
+//		// Process input and add result to output MessageQueue
+//		std::istringstream inStream(line.getString());
+//		Message result = evalStream(inStream);/*** Not thread-safe ***/
+//		outputQ->push(result);
+//	}
+//}
+
+
 void Interpreter::threadEvalLoop()
 {
 	while(true){
@@ -65,8 +91,8 @@ void Interpreter::threadEvalLoop()
 		
 		// Process input and add result to output MessageQueue
 		std::istringstream inStream(line.getString());
-		Message result = evalStream(inStream);
-		outputQ->push(result);
+		//Message result = evalStream(inStream);/*** Not thread-safe ***/
+		outputQ->push(Message(evalStream(inStream)));
 	}
 	// End of Program
 }

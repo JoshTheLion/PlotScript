@@ -29,8 +29,8 @@ public:
 	// constructors for use in container push, assignment, and output
 	Message() : type(NoneType){};
 	Message(Type t, const String & s){
-		if(t == StringType) setString(s);
-		if(t == ErrorType)  setError(s);
+		if(t == StringType) { setString(s); }
+		else if(t == ErrorType) { setError(s); }
 		else setNone();
 	}
 	Message(Type t, const Expression & e){
